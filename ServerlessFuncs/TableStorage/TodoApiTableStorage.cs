@@ -1,6 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Azure;
 using Azure.Data.Tables;
@@ -20,19 +22,33 @@ public static class TodoApiTableStorage
     private const string TableName = "todos";
     private const string PartitionKey = "TODO";
 
+
+
+    
+
     [FunctionName("Table_CreateTodo")]
     public static async Task<IActionResult> CreateTodo(
         [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = Route)] HttpRequest req,
         [Table(TableName, Connection = "AzureWebJobsStorage")] IAsyncCollector<TodoTableEntity> todoTable,
         ILogger log)
     {
-        log.LogInformation("Creating a new todo list item");
-        string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
-        var input = JsonConvert.DeserializeObject<TodoCreateModel>(requestBody);
+        try
+        {
+            log.LogInformation("Creating a new todo list item \n \n");
+            string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
+            var input = JsonConvert.DeserializeObject<TodoCreateModel>(requestBody);
 
-        var todo = new Todo() { TaskDescription = input.TaskDescription };
-        await todoTable.AddAsync(todo.ToTableEntity());
-        return new OkObjectResult(todo);
+            log.LogError("This is a test error 123 \n");
+            log.LogCritical("This is a test critical 666");
+            var todo = new Todo() { TaskDescription = input.TaskDescription };
+            await todoTable.AddAsync(todo.ToTableEntity());
+            return new OkObjectResult(todo);
+        } catch (Exception ex)
+        {
+            log.LogError(ex.ToString() + "\n");
+            return new BadRequestObjectResult(ex.Message);
+        }
+        
     }
 
     [FunctionName("Table_GetTodos")]
@@ -41,20 +57,30 @@ public static class TodoApiTableStorage
         [Table(TableName, Connection = "AzureWebJobsStorage")] TableClient todoTable,
         ILogger log)
     {
+        string paginationToken = req.Query["paginationToken"];
         log.LogInformation("Getting todo list items");
         List<Todo> page1 = new List<Todo>();
-        await foreach (Page<TodoTableEntity> page in todoTable.QueryAsync<TodoTableEntity>().AsPages())
+
+        var returnObj = new ReturnModel();
+        
+        await foreach (Page<TodoTableEntity> page in todoTable.QueryAsync<TodoTableEntity>().AsPages(paginationToken, 5))
         {
             var pages = page.Values.ToList();
+            returnObj.paginationToken = page.ContinuationToken;
             foreach (var p in pages)
             {          
                 page1.Add(p.ToTodo());
             }
             break;
         }
-        
-        return new OkObjectResult(page1);
-    }  
+
+        page1.OrderByDescending(r => r.CreatedTime);
+        returnObj.Todos = page1;
+
+        return new OkObjectResult(returnObj);
+    }
+
+
 
     [FunctionName("Table_GetTodoById")]
     public static IActionResult GetTodoById(

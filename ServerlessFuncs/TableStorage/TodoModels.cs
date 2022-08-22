@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+
 namespace ServerlessFuncs.TableStorage
 {
     public class Todo
@@ -18,6 +20,12 @@ namespace ServerlessFuncs.TableStorage
     {
         public string TaskDescription { get; set; }
         public bool IsCompleted { get; set; }
+    }
+
+    public class ReturnModel
+    {
+        public string paginationToken { get; set; }
+        public List<Todo> Todos  = new List<Todo>();
     }
 
 }

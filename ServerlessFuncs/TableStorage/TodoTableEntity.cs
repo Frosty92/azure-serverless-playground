@@ -1,5 +1,6 @@
 ﻿using Azure;
 using Azure.Data.Tables;
+using ServerlessFuncs.TableStorage;
 using System;
 
 namespace AzureFunctionsTodo.TableStorage
@@ -18,4 +19,5 @@ namespace AzureFunctionsTodo.TableStorage
         public DateTimeOffset? Timestamp { get; set; }
         public ETag ETag { get; set; }
     }
+
 }
