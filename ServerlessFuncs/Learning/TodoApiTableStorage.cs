@@ -23,7 +23,7 @@ public static class TodoApiTableStorage
     private const string PartitionKey = "TODO";
 
 
-
+    /*
     
 
     [FunctionName("Table_CreateTodo")]
@@ -85,7 +85,7 @@ public static class TodoApiTableStorage
     [FunctionName("Table_GetTodoById")]
     public static IActionResult GetTodoById(
         [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = Route + "/{id}")] HttpRequest req,
-        [Table(TableName, "TODO", "{id}", Connection = "AzureWebJobsStorage")] TodoTableEntity todo,
+        [Table(TableName,"TODO", "{id}", Connection = "AzureWebJobsStorage")] TodoTableEntity todo,
         ILogger log, string id)
     {
         log.LogInformation("Getting todo item by id");
@@ -144,4 +144,5 @@ public static class TodoApiTableStorage
         }
         return new OkResult();
     }
+    */
 }

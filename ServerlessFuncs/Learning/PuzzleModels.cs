@@ -1,5 +1,6 @@
 ﻿using System;
 using AzureFunctionsTodo.TableStorage;
+using ServerlessFuncs.Utils;
 
 namespace ServerlessFuncs.TableStorage
 {

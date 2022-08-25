@@ -10,7 +10,8 @@
   <ItemGroup>
     <None Remove="Microsoft.Azure.WebJobs.Extensions.Storage" />
     <None Remove="Microsoft.Azure.WebJobs.Extensions.Tables" />
-    <None Remove="TableStorage\" />
+    <None Remove="Utils\" />
+    <None Remove="UserPuzzle\History\" />
   </ItemGroup>
   <ItemGroup>
     <None Update="host.json">
@@ -22,6 +23,7 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="TableStorage\" />
+    <Folder Include="Utils\" />
+    <Folder Include="UserPuzzle\History\" />
   </ItemGroup>
 </Project>

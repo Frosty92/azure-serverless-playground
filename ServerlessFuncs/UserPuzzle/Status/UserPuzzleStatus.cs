@@ -1,0 +1,18 @@
+﻿using System;
+using System.Collections.Generic;
+using ServerlessFuncs.Puzzles;
+
+namespace ServerlessFuncs.UserProgress
+{
+    public class UserPuzzleStatus
+    {
+        public int LevelNum { get; set; }
+        public int LoopNum { get; set; }
+        public int LastCompletedPuzzleIndex { get; set; }
+        public string PaginationToken { get; set; }
+        public int UserRating { get; set; }
+        public List<Puzzle> Puzzles = new List<Puzzle>();
+        public bool GetNextPuzzleSet { get; set; }
+    }
+}
+
