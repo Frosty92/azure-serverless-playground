@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using ServerlessFuncs.Puzzles;
+using ServerlessFuncs.TableStorage;
 using ServerlessFuncs.UserProgress;
 
 namespace ServerlessFuncs.UserPuzzle.Progress
@@ -15,7 +16,8 @@ namespace ServerlessFuncs.UserPuzzle.Progress
                 LoopNum = puzzleEntity.LoopNum,
                 UserRating = puzzleEntity.UserRating,
                 LastCompletedPuzzleIndex = puzzleEntity.LastCompletedPuzzleIndex,
-                PaginationToken = puzzleEntity.PaginationToken
+                NextPageToken = puzzleEntity.NextPageToken,
+                CurrentPageToken = puzzleEntity.CurrentPageToken,
             };
         }
 
@@ -29,8 +31,9 @@ namespace ServerlessFuncs.UserPuzzle.Progress
                 LastCompletedPuzzleIndex = puzzleProgress.LastCompletedPuzzleIndex,
                 LevelNum = puzzleProgress.LevelNum,
                 UserRating = puzzleProgress.UserRating,
-                PaginationToken = puzzleProgress.PaginationToken,
-                LoopNum = puzzleProgress.LoopNum
+                NextPageToken = puzzleProgress.NextPageToken,
+                LoopNum = puzzleProgress.LoopNum,
+                CurrentPageToken = puzzleProgress.CurrentPageToken,
             };
         }
     }

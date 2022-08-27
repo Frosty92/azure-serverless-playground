@@ -9,7 +9,8 @@ namespace ServerlessFuncs.UserProgress
         public int LevelNum { get; set; }
         public int LoopNum { get; set; }
         public int LastCompletedPuzzleIndex { get; set; }
-        public string PaginationToken { get; set; }
+        public string CurrentPageToken { get; set; }
+        public string NextPageToken { get; set; }
         public int UserRating { get; set; }
         public List<Puzzle> Puzzles = new List<Puzzle>();
         public bool GetNextPuzzleSet { get; set; }

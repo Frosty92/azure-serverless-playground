@@ -15,6 +15,7 @@ using ServerlessFuncs.TableStorage;
 using System.Collections.Generic;
 using System.Linq;
 using System.Diagnostics;
+using ServerlessFuncs.UserPuzzle.Status;
 
 namespace ServerlessFuncs.Puzzles
 {
@@ -29,28 +30,20 @@ namespace ServerlessFuncs.Puzzles
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = Route + "/{level}")] HttpRequest req,
             [Table(TableName,"{level}", Connection = "AzureWebJobsStorage")] TableClient puzzlesTable,
             ILogger log,
-            string level)
+            int level)
         {
-            string paginationToken = req.Query["paginationToken"];
+            string currentPageToken = req.Query["currentPageToken"];
+            string nextPageToken = req.Query["nextPageToken"];
 
-            log.LogInformation($"LEVEL provided is: {level}");
+            var puzzleSetFetcher = new PuzzleSetFetcher(puzzlesTable);
+            var puzzleSet = await puzzleSetFetcher.FetchPuzzleSet(
+                level,
+                0,
+                currentPageToken,
+                nextPageToken
+            );
 
-            var responseObj = new PuzzlesResponseObj();
-            var puzzles = new List<Puzzle>();
-            await foreach (Page<PuzzleEntity> page in puzzlesTable.QueryAsync<PuzzleEntity>().AsPages(paginationToken, 20))
-            {
-                List<PuzzleEntity> pages = page.Values.ToList();
-                responseObj.PaginationToken = page.ContinuationToken;
-                foreach (var p in pages)
-                {
-                    puzzles.Add(p.ToPuzzle());
-                }
-                break;
-            }
-
-            responseObj.Puzzles = puzzles;
-
-            return new OkObjectResult(responseObj);
+            return new OkObjectResult(puzzleSet);
         }
     }
 }

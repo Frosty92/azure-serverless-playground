@@ -6,9 +6,11 @@ namespace ServerlessFuncs.PuzzleNS
 {
     public class PuzzleSet
     {
-        public string PaginationToken { get; set; }
         public List<Puzzle> Puzzles = new List<Puzzle>();
+        public string CurrentPageToken { get; set; }
+        public string NextPageToken { get; set; }
         public int LevelNum { get; set; }
+        public int LastCompletedPuzzleIndex { get; set; }
     }
 }
 

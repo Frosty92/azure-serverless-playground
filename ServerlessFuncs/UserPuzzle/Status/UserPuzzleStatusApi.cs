@@ -18,6 +18,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using ServerlessFuncs.PuzzleNS;
+using ServerlessFuncs.UserPuzzle.Status;
 
 namespace ServerlessFuncs.UserProgress
 {
@@ -27,9 +28,6 @@ namespace ServerlessFuncs.UserProgress
         private const string UserPuzzleStatusTable = "userPuzzleStatus";
         private const string PuzzlesTable = "puzzles";
         private const string UserPuzzleHistoryTable = "userPuzzleHistory";
-
-        private const int PUZZLES_PER_PAGE = 30;
-
 
 
         [FunctionName("GetUserPuzzleStatus")]
@@ -49,7 +47,7 @@ namespace ServerlessFuncs.UserProgress
                 {
                     LoopNum = 1,
                     LevelNum = 1,
-                    LastCompletedPuzzleIndex = 0,
+                    LastCompletedPuzzleIndex = -1,
                     UserRating = 1200,                    
                 };
 
@@ -58,55 +56,10 @@ namespace ServerlessFuncs.UserProgress
                 puzzleStatus = progressEntity.ToUserPuzzleStatus();
             }
 
-            var puzzleSet = await GetPuzzleSet(
-                puzzlesTable,
-                puzzleStatus.PaginationToken,
-                puzzleStatus.LastCompletedPuzzleIndex,
-                puzzleStatus.LevelNum,
-                log
-              );
+            await UpdatePuzzleStatusWithPuzzleSet(puzzlesTable, puzzleStatus);
 
-            puzzleStatus.Puzzles = puzzleSet.Puzzles;
-            puzzleStatus.PaginationToken = puzzleSet.PaginationToken;
 
             return new OkObjectResult(puzzleStatus);
-        }
-
-
-
-
-        private static async Task<PuzzleSet> GetPuzzleSet(
-            TableClient puzzlesTable,
-            string paginationToken,
-            int lastCompletedIndex,
-            int levelNum,
-            ILogger log
-           )
-        {
-            var puzzleSet = new PuzzleSet();
-            string filter = $"partitionKey eq '{levelNum}'";
-            await foreach (Page<PuzzleEntity> page in puzzlesTable.QueryAsync<PuzzleEntity>(e => e.PartitionKey == levelNum.ToString()).AsPages(paginationToken, 30))
-            {
-                List<PuzzleEntity> puzzlesPage = page.Values.ToList();
-
-                log.LogInformation($"puzzle page count is: {puzzlesPage.Count}");
-
-                
-
-                puzzleSet.PaginationToken = page.ContinuationToken;
-                puzzleSet.LevelNum = levelNum;
-
-                for (int i = lastCompletedIndex; i < puzzlesPage.Count; i++)
-                {
-                    var puzzle = puzzlesPage[i];
-                    puzzleSet.Puzzles.Add(puzzle.ToPuzzle());
-                }
-                if (puzzleSet.Puzzles.Count >= PUZZLES_PER_PAGE)
-                {
-                    break;
-                }
-            }
-            return puzzleSet;
         }
 
         [FunctionName("CreateUserPuzzleStatus")]
@@ -125,17 +78,7 @@ namespace ServerlessFuncs.UserProgress
 
                 if (puzzStatus.GetNextPuzzleSet)
                 {
-                    var puzzleSet = await GetPuzzleSet(
-                        puzzlesTable,
-                        puzzStatus.PaginationToken,
-                        puzzStatus.LastCompletedPuzzleIndex,
-                        puzzStatus.LevelNum,
-                        log
-                       );
-
-                    puzzStatus.PaginationToken = puzzleSet.PaginationToken;
-                    puzzStatus.LastCompletedPuzzleIndex = 0;
-                    puzzStatus.Puzzles = puzzleSet.Puzzles;
+                    await UpdatePuzzleStatusWithPuzzleSet(puzzlesTable, puzzStatus);
                 }
                 
                 await progressTable.AddAsync(puzzStatus.ToUserPuzzleStatusEntity(userID));
@@ -164,21 +107,6 @@ namespace ServerlessFuncs.UserProgress
                 string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
                 var updatedEntity = JsonConvert.DeserializeObject<UserPuzzleStatus>(requestBody);
 
-                if (updatedEntity.GetNextPuzzleSet)
-                {
-                    var puzzleSet = await GetPuzzleSet(
-                        puzzlesTable,
-                        updatedEntity.PaginationToken,
-                        updatedEntity.LastCompletedPuzzleIndex,
-                        updatedEntity.LevelNum,
-                        log
-                       );
-
-                    updatedEntity.PaginationToken = puzzleSet.PaginationToken;
-                    updatedEntity.LastCompletedPuzzleIndex = 0;
-                    updatedEntity.Puzzles = puzzleSet.Puzzles;
-                }
-
                 UserPuzzleStatusEntity existingRow = null;
                 try
                 {
@@ -190,14 +118,21 @@ namespace ServerlessFuncs.UserProgress
                     return new NotFoundResult();
                 }
 
+
+                if (updatedEntity.GetNextPuzzleSet)
+                {
+                    await UpdatePuzzleStatusWithPuzzleSet(puzzlesTable, updatedEntity);
+                    updatedEntity.LastCompletedPuzzleIndex = -1;
+                }
+
                 existingRow.LastCompletedPuzzleIndex = updatedEntity.LastCompletedPuzzleIndex;
-                existingRow.LevelNum= updatedEntity.LevelNum;
+                existingRow.LevelNum = updatedEntity.LevelNum;
                 existingRow.LoopNum = updatedEntity.LoopNum;
-                existingRow.PaginationToken = updatedEntity.PaginationToken;
+                existingRow.CurrentPageToken = updatedEntity.CurrentPageToken;
+                existingRow.NextPageToken = updatedEntity.NextPageToken;
                 existingRow.UserRating = updatedEntity.UserRating;
 
                 await progressTable.UpdateEntityAsync(existingRow, existingRow.ETag, TableUpdateMode.Replace);
-
 
                 return updatedEntity.GetNextPuzzleSet ? new OkObjectResult(updatedEntity) :  new OkResult();
             }
@@ -206,6 +141,28 @@ namespace ServerlessFuncs.UserProgress
                 return new BadRequestObjectResult(ex.ToString());
             }
         }
+
+        private static async Task UpdatePuzzleStatusWithPuzzleSet(TableClient puzzlesTable, UserPuzzleStatus userStatus)
+        {
+            var puzzleSetFetcher = new PuzzleSetFetcher(puzzlesTable);
+            var puzzleSet = await puzzleSetFetcher.FetchPuzzleSet(
+                userStatus.LevelNum,
+                userStatus.LastCompletedPuzzleIndex,
+                userStatus.CurrentPageToken,
+                userStatus.NextPageToken
+                );
+
+            userStatus.Puzzles = puzzleSet.Puzzles;
+            userStatus.CurrentPageToken = puzzleSet.CurrentPageToken;
+            userStatus.NextPageToken = puzzleSet.NextPageToken;
+            userStatus.LevelNum = puzzleSet.LevelNum;
+            userStatus.LastCompletedPuzzleIndex = puzzleSet.LastCompletedPuzzleIndex;
+
+       
+            
+
+        }
+
+
     }
 }
-
