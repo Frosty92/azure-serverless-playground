@@ -25,7 +25,7 @@ namespace ServerlessFuncs.Puzzles
         private const string Route = "puzzles";
 
  
-        [FunctionName("Table_GetPuzzlesForLevel")]
+        [FunctionName("GetPuzzlesForLevel")]
         public static async Task<IActionResult> GetPuzzlesForLevel(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = Route + "/{level}")] HttpRequest req,
             [Table(TableName,"{level}", Connection = "AzureWebJobsStorage")] TableClient puzzlesTable,

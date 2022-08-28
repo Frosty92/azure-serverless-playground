@@ -9,13 +9,14 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using AzureFunctionsTodo.TableStorage;
 using System.Collections.Generic;
+using ServerlessFuncs.Puzzles;
 
 namespace ServerlessFuncs.TableStorage
 {
     public static class PuzzlesUploader
     {
-        [FunctionName("JSON_Read")]
-        public static async Task<IActionResult> ReadJSON(
+        [FunctionName("UploadPuzzles")]
+        public static async Task<IActionResult> UploadPuzzles(
         [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "parse")] HttpRequest req,
         [Table("puzzles", Connection = "AzureWebJobsStorage")] IAsyncCollector<PuzzleEntity> puzzleTable,
         ExecutionContext context,
@@ -25,7 +26,7 @@ namespace ServerlessFuncs.TableStorage
             {
                 var puzzles = new List<Puzzle>();
                 var pEntities = new List<PuzzleEntity>();
-                for (int level = 3; level <= 6; level++)
+                for (int level = 2; level <= 6; level++)
                 {
                     puzzles = PuzzlesUploader.GetPuzzles(level);
                     foreach (var p in puzzles)

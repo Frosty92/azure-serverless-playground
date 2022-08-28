@@ -26,16 +26,4 @@ public static class Mappings
         };
     }
 
-    public static PuzzleEntity ToPuzzleEntity(this Puzzle puzzle, int partitionKey)
-    {
-        return new PuzzleEntity()
-        {
-            PartitionKey = partitionKey.ToString(),
-            RowKey = puzzle.Id,
-            Fen = puzzle.Fen,
-            Moves = puzzle.Moves,
-            Tags = puzzle.Tags
-        };
-    }
-
 }

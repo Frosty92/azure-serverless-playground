@@ -11,7 +11,10 @@ namespace ServerlessFuncs.Puzzles
                 RowKey = puzzle.Id,
                 Fen = puzzle.Fen,
                 Moves = puzzle.Moves,
-                Tags = puzzle.Tags
+                Tags = puzzle.Tags,
+                Rating = puzzle.Rating,
+                URL = puzzle.URL
+                
             };
         }
 
@@ -22,7 +25,9 @@ namespace ServerlessFuncs.Puzzles
                 Id = puzzleEntity.RowKey,
                 Fen = puzzleEntity.Fen,
                 Moves = puzzleEntity.Moves,
-                Tags = puzzleEntity.Tags
+                Tags = puzzleEntity.Tags,
+                Rating = puzzleEntity.Rating,
+                URL = puzzleEntity.URL
             };
         }
 
