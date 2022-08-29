@@ -13,7 +13,7 @@ namespace ServerlessFuncs.UserPuzzle.Status
     public class PuzzleSetFetcher
     {
 
-        public static readonly int PUZZLES_PER_PAGE = 20;
+        public static readonly int PUZZLES_PER_PAGE = 10;
         public static readonly int START_INDEX = -1;
         private static readonly int MAX_LEVEL = 6;
 
