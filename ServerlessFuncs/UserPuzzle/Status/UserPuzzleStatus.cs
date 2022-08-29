@@ -12,6 +12,7 @@ namespace ServerlessFuncs.UserProgress
         public string CurrentPageToken { get; set; }
         public string NextPageToken { get; set; }
         public int UserRating { get; set; }
+        public bool IsNewUser { get; set; }
         public List<Puzzle> Puzzles = new List<Puzzle>();
         public bool GetNextPuzzleSet { get; set; }
     }
