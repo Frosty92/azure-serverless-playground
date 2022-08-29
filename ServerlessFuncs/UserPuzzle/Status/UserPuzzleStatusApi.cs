@@ -63,10 +63,10 @@ namespace ServerlessFuncs.UserProgress
             return new OkObjectResult(puzzleStatus);
         }
 
-        [FunctionName("PostUserPuzzleStatus")]
+        [FunctionName("CreateUserPuzzleStatus")]
         public static async Task<IActionResult> CreateuserPuzzleStatus(
             [HttpTrigger(AuthorizationLevel.Anonymous, "Post", Route = Route + "/{userID}")] HttpRequest req,
-            [Table(UserPuzzleStatusTable, Connection = "AzureWebJobsStorage")] TableClient progressTable,
+            [Table(UserPuzzleStatusTable, Connection = "AzureWebJobsStorage")] IAsyncCollector<UserPuzzleStatusEntity> progressTable,
             [Table(PuzzlesTable, Connection = "AzureWebJobsStorage")] TableClient puzzlesTable,
             ILogger log,
             string userID
@@ -76,31 +76,15 @@ namespace ServerlessFuncs.UserProgress
             {
                 string reqBody = await new StreamReader(req.Body).ReadToEndAsync();
                 UserPuzzleStatus puzzStatus = JsonConvert.DeserializeObject<UserPuzzleStatus>(reqBody);
-                UserPuzzleStatusEntity puzzEntity = puzzStatus.ToUserPuzzleStatusEntity(userID);
 
                 if (puzzStatus.GetNextPuzzleSet)
                 {
                     await UpdatePuzzleStatusWithPuzzleSet(puzzlesTable, puzzStatus);
                 }
 
-                if (puzzStatus.IsNewUser)
-                {
-                    await progressTable.AddEntityAsync<UserPuzzleStatusEntity>(puzzEntity);
-                }
-                else
-                {
-                    var findResult = await progressTable.GetEntityAsync<UserPuzzleStatusEntity>(userID, userID);
-                    var existingRow = findResult.Value;
-                    existingRow.LastCompletedPuzzleIndex = puzzEntity.LastCompletedPuzzleIndex;
-                    existingRow.LevelNum = puzzEntity.LevelNum;
-                    existingRow.LoopNum = puzzEntity.LoopNum;
-                    existingRow.CurrentPageToken = puzzEntity.CurrentPageToken;
-                    existingRow.NextPageToken = puzzEntity.NextPageToken;
-                    existingRow.UserRating = puzzEntity.UserRating;
+                await progressTable.AddAsync(puzzStatus.ToUserPuzzleStatusEntity(userID));
 
-                    await progressTable.UpdateEntityAsync(existingRow, existingRow.ETag, TableUpdateMode.Replace);
-                }
-                return  puzzStatus.GetNextPuzzleSet ?  new OkObjectResult(puzzStatus) : new OkResult();
+                return puzzStatus.GetNextPuzzleSet ? new OkObjectResult(puzzStatus) : new OkResult();
             }
             catch (Exception ex)
             {
@@ -108,54 +92,58 @@ namespace ServerlessFuncs.UserProgress
             }
         }
 
-        //[FunctionName("UpdateUserPuzzleStatus")]
-        //public static async Task<IActionResult> UpdateUserPuzzleStatus(
-        //    [HttpTrigger(AuthorizationLevel.Anonymous, "Put", Route = Route + "/{userID}")] HttpRequest req,
-        //    [Table(UserPuzzleStatusTable, "{userID}", Connection = "AzureWebJobsStorage")] TableClient progressTable,
-        //    [Table(PuzzlesTable, Connection = "AzureWebJobsStorage")] TableClient puzzlesTable,
-        //    ILogger log,
-        //    string userID
-        //    )
-        //{
 
-        //    try
-        //    {
-        //        string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
-        //        var updatedEntity = JsonConvert.DeserializeObject<UserPuzzleStatus>(requestBody);
-        //        UserPuzzleStatusEntity existingRow = null;
-        //        try
-        //        {
-        //            var findResult = await progressTable.GetEntityAsync<UserPuzzleStatusEntity>(userID, userID);
-        //            existingRow = findResult.Value;
-        //        }
-        //        catch (RequestFailedException e) when (e.Status == 404)
-        //        {
-        //            return new NotFoundResult();
-        //        }
+        [FunctionName("UpdateUserPuzzleStatus")]
+        public static async Task<IActionResult> UpdateUserPuzzleStatus(
+            [HttpTrigger(AuthorizationLevel.Anonymous, "Put", Route = Route + "/{userID}")] HttpRequest req,
+            [Table(UserPuzzleStatusTable, "{userID}", Connection = "AzureWebJobsStorage")] TableClient progressTable,
+            [Table(PuzzlesTable, Connection = "AzureWebJobsStorage")] TableClient puzzlesTable,
+            ILogger log,
+            string userID
+            )
+        {
+
+            try
+            {
+                string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
+                var updatedEntity = JsonConvert.DeserializeObject<UserPuzzleStatus>(requestBody);
+
+                UserPuzzleStatusEntity existingRow = null;
+                try
+                {
+                    var findResult = await progressTable.GetEntityAsync<UserPuzzleStatusEntity>(userID, userID);
+                    existingRow = findResult.Value;
+                }
+                catch (RequestFailedException e) when (e.Status == 404)
+                {
+                    return new NotFoundResult();
+                }
 
 
-        //        if (updatedEntity.GetNextPuzzleSet)
-        //        {
-        //            await UpdatePuzzleStatusWithPuzzleSet(puzzlesTable, updatedEntity);
-        //            updatedEntity.LastCompletedPuzzleIndex = -1;
-        //        }
+                if (updatedEntity.GetNextPuzzleSet)
+                {
+                    await UpdatePuzzleStatusWithPuzzleSet(puzzlesTable, updatedEntity);
+                    updatedEntity.LastCompletedPuzzleIndex = -1;
+                }
 
-        //        existingRow.LastCompletedPuzzleIndex = updatedEntity.LastCompletedPuzzleIndex;
-        //        existingRow.LevelNum = updatedEntity.LevelNum;
-        //        existingRow.LoopNum = updatedEntity.LoopNum;
-        //        existingRow.CurrentPageToken = updatedEntity.CurrentPageToken;
-        //        existingRow.NextPageToken = updatedEntity.NextPageToken;
-        //        existingRow.UserRating = updatedEntity.UserRating;
+                existingRow.LastCompletedPuzzleIndex = updatedEntity.LastCompletedPuzzleIndex;
+                existingRow.LevelNum = updatedEntity.LevelNum;
+                existingRow.LoopNum = updatedEntity.LoopNum;
+                existingRow.CurrentPageToken = updatedEntity.CurrentPageToken;
+                existingRow.NextPageToken = updatedEntity.NextPageToken;
+                existingRow.UserRating = updatedEntity.UserRating;
 
-        //        await progressTable.UpdateEntityAsync(existingRow, existingRow.ETag, TableUpdateMode.Replace);
+                await progressTable.UpdateEntityAsync(existingRow, existingRow.ETag, TableUpdateMode.Replace);
 
-        //        return updatedEntity.GetNextPuzzleSet ? new OkObjectResult(updatedEntity) :  new OkResult();
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        return new BadRequestObjectResult(ex.ToString());
-        //    }
-        //}
+                return updatedEntity.GetNextPuzzleSet ? new OkObjectResult(updatedEntity) : new OkResult();
+            }
+            catch (Exception ex)
+            {
+                return new BadRequestObjectResult(ex.ToString());
+            }
+        }
+
+
 
 
         private static async Task UpdatePuzzleStatusWithPuzzleSet(TableClient puzzlesTable, UserPuzzleStatus userStatus)
@@ -172,13 +160,7 @@ namespace ServerlessFuncs.UserProgress
             userStatus.CurrentPageToken = puzzleSet.CurrentPageToken;
             userStatus.NextPageToken = puzzleSet.NextPageToken;
             userStatus.LevelNum = puzzleSet.LevelNum;
-            userStatus.LastCompletedPuzzleIndex = puzzleSet.LastCompletedPuzzleIndex;
-
-       
-            
-
+            userStatus.LastCompletedPuzzleIndex = puzzleSet.LastCompletedPuzzleIndex;          
         }
-
-
     }
 }
