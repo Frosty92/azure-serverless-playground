@@ -77,14 +77,16 @@ namespace ServerlessFuncs.UserProgress
                 string reqBody = await new StreamReader(req.Body).ReadToEndAsync();
                 UserPuzzleStatus puzzStatus = JsonConvert.DeserializeObject<UserPuzzleStatus>(reqBody);
 
+                await progressTable.AddAsync(puzzStatus.ToUserPuzzleStatusEntity(userID));
                 if (puzzStatus.GetNextPuzzleSet)
                 {
-                    await UpdatePuzzleStatusWithPuzzleSet(puzzlesTable, puzzStatus);
+                    var nextPuzzleSet = await GetNextPuzzleSet(puzzlesTable, puzzStatus.LevelNum, puzzStatus.NextPageToken);
+                    return new OkObjectResult(nextPuzzleSet);
                 }
-
-                await progressTable.AddAsync(puzzStatus.ToUserPuzzleStatusEntity(userID));
-
-                return puzzStatus.GetNextPuzzleSet ? new OkObjectResult(puzzStatus) : new OkResult();
+                else
+                {
+                    return new OkResult();
+                }
             }
             catch (Exception ex)
             {
@@ -120,12 +122,6 @@ namespace ServerlessFuncs.UserProgress
                 }
 
 
-                if (updatedEntity.GetNextPuzzleSet)
-                {
-                    await UpdatePuzzleStatusWithPuzzleSet(puzzlesTable, updatedEntity);
-                    updatedEntity.LastCompletedPuzzleIndex = -1;
-                }
-
                 existingRow.LastCompletedPuzzleIndex = updatedEntity.LastCompletedPuzzleIndex;
                 existingRow.LevelNum = updatedEntity.LevelNum;
                 existingRow.LoopNum = updatedEntity.LoopNum;
@@ -135,7 +131,15 @@ namespace ServerlessFuncs.UserProgress
 
                 await progressTable.UpdateEntityAsync(existingRow, existingRow.ETag, TableUpdateMode.Replace);
 
-                return updatedEntity.GetNextPuzzleSet ? new OkObjectResult(updatedEntity) : new OkResult();
+                if (updatedEntity.GetNextPuzzleSet)
+                {
+                    var nextPuzzleSet = await GetNextPuzzleSet(puzzlesTable, updatedEntity.LevelNum, updatedEntity.NextPageToken);
+                    return new OkObjectResult(nextPuzzleSet);
+                } else
+                {
+                    return new OkResult();
+                }
+
             }
             catch (Exception ex)
             {
@@ -145,6 +149,18 @@ namespace ServerlessFuncs.UserProgress
 
 
 
+        private static async Task<PuzzleSet> GetNextPuzzleSet(TableClient puzzlesTable, int levelNum, string nextPageToken)
+        {
+            var puzzleSetFetcher = new PuzzleSetFetcher(puzzlesTable);
+            var puzzleSet = await puzzleSetFetcher.FetchPuzzleSet(
+                levelNum,
+                PuzzleSetFetcher.PUZZLES_PER_PAGE - 1,
+                null,
+                nextPageToken
+                );
+
+            return puzzleSet;
+        }
 
         private static async Task UpdatePuzzleStatusWithPuzzleSet(TableClient puzzlesTable, UserPuzzleStatus userStatus)
         {
