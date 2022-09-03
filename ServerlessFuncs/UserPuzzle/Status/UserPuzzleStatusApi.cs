@@ -39,28 +39,37 @@ namespace ServerlessFuncs.UserProgress
             string userID
             )
         {
-            UserPuzzleStatus puzzleStatus;
-            if (progressEntity == null)
+            try
             {
-                log.LogInformation("Running puzzle ctr");
-                puzzleStatus = new UserPuzzleStatus()
+                UserPuzzleStatus puzzleStatus;
+                if (progressEntity == null)
                 {
-                    LoopNum = 1,
-                    LevelNum = 1,
-                    LastCompletedPuzzleIndex = -1,
-                    UserRating = 1200,
-                    IsNewUser = true
-                };
+                    log.LogInformation("Running puzzle ctr");
+                    puzzleStatus = new UserPuzzleStatus()
+                    {
+                        LoopNum = 1,
+                        LevelNum = 1,
+                        LastCompletedPuzzleIndex = -1,
+                        UserRating = 1200,
+                        IsNewUser = true
+                    };
 
-            } else
+                }
+                else
+                {
+                    puzzleStatus = progressEntity.ToUserPuzzleStatus();
+                }
+
+                await UpdatePuzzleStatusWithPuzzleSet(puzzlesTable, puzzleStatus);
+
+
+                return new OkObjectResult(puzzleStatus);
+            } catch (Exception ex)
             {
-                puzzleStatus = progressEntity.ToUserPuzzleStatus();
+                log.LogError($"for user ID: {userID}. Excep is: {ex.ToString()}");
+                return new BadRequestObjectResult(ex.ToString());
             }
-
-            await UpdatePuzzleStatusWithPuzzleSet(puzzlesTable, puzzleStatus);
-
-
-            return new OkObjectResult(puzzleStatus);
+            
         }
 
         [FunctionName("CreateUserPuzzleStatus")]

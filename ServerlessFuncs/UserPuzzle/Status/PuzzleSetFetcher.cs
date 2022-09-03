@@ -38,7 +38,11 @@ namespace ServerlessFuncs.UserPuzzle.Status
                 : await GetPuzzleSet(levelNum, lastCompletedIndex, currentPageToken);
 
             if (puzzleSet.Puzzles.Count > 0 || levelNum + 1 > MAX_LEVEL) return puzzleSet;
-            else return await GetPuzzleSet(levelNum + 1, START_INDEX, null);
+
+            else throw new Exception($"For level:{levelNum}, index: {lastCompletedIndex}, currentPageToken: {currentPageToken}, nextPageToken: {NextPageToken}");
+
+
+            //else return await GetPuzzleSet(levelNum + 1, START_INDEX, null);
         }
 
 

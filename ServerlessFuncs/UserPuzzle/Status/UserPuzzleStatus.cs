@@ -15,6 +15,8 @@ namespace ServerlessFuncs.UserProgress
         public bool IsNewUser { get; set; }
         public List<Puzzle> Puzzles = new List<Puzzle>();
         public bool GetNextPuzzleSet { get; set; }
+        public int TotalPuzzlesCompleted { get; set; }
+        public Dictionary<int, int> PuzzlesCompletedBylevel { get; set; } = new Dictionary<int, int>();
     }
 }
 
