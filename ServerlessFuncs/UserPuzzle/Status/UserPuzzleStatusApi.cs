@@ -44,16 +44,16 @@ namespace ServerlessFuncs.UserProgress
                 UserPuzzleStatus puzzleStatus;
                 if (progressEntity == null)
                 {
-                    log.LogInformation("Running puzzle ctr");
                     puzzleStatus = new UserPuzzleStatus()
                     {
                         LoopNum = 1,
                         LevelNum = 1,
                         LastCompletedPuzzleIndex = -1,
                         UserRating = 1200,
-                        IsNewUser = true
+                        IsNewUser = true,
                     };
-
+                    puzzleStatus.PuzzlesCompletedForLevel = 0;
+                    puzzleStatus.LevelPuzzleCount = PuzzleSetFetcher.PUZZLE_COUNT_LVL_1;
                 }
                 else
                 {
@@ -137,6 +137,8 @@ namespace ServerlessFuncs.UserProgress
                 existingRow.CurrentPageToken = updatedEntity.CurrentPageToken;
                 existingRow.NextPageToken = updatedEntity.NextPageToken;
                 existingRow.UserRating = updatedEntity.UserRating;
+                existingRow.PuzzlesCompletedForLevel = updatedEntity.PuzzlesCompletedForLevel;
+                existingRow.TotalPuzzlesCompleted = updatedEntity.TotalPuzzlesCompleted;
 
                 await progressTable.UpdateEntityAsync(existingRow, existingRow.ETag, TableUpdateMode.Replace);
 
@@ -185,7 +187,8 @@ namespace ServerlessFuncs.UserProgress
             userStatus.CurrentPageToken = puzzleSet.CurrentPageToken;
             userStatus.NextPageToken = puzzleSet.NextPageToken;
             userStatus.LevelNum = puzzleSet.LevelNum;
-            userStatus.LastCompletedPuzzleIndex = puzzleSet.LastCompletedPuzzleIndex;          
+            userStatus.LastCompletedPuzzleIndex = puzzleSet.LastCompletedPuzzleIndex;
+            userStatus.LevelPuzzleCount = puzzleSet.LevelPuzzleCount;
         }
     }
 }

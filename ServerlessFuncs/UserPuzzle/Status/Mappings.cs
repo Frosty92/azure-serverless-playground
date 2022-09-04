@@ -18,6 +18,8 @@ namespace ServerlessFuncs.UserPuzzle.Progress
                 LastCompletedPuzzleIndex = puzzleEntity.LastCompletedPuzzleIndex,
                 NextPageToken = puzzleEntity.NextPageToken,
                 CurrentPageToken = puzzleEntity.CurrentPageToken,
+                PuzzlesCompletedForLevel = puzzleEntity.PuzzlesCompletedForLevel,
+                TotalPuzzlesCompleted = puzzleEntity.TotalPuzzlesCompleted,
             };
         }
 
@@ -34,6 +36,8 @@ namespace ServerlessFuncs.UserPuzzle.Progress
                 NextPageToken = puzzleProgress.NextPageToken,
                 LoopNum = puzzleProgress.LoopNum,
                 CurrentPageToken = puzzleProgress.CurrentPageToken,
+                PuzzlesCompletedForLevel = puzzleProgress.PuzzlesCompletedForLevel,
+                TotalPuzzlesCompleted = puzzleProgress.TotalPuzzlesCompleted
             };
         }
     }

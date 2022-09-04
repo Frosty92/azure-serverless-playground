@@ -7,6 +7,7 @@ namespace ServerlessFuncs.UserProgress
     public class UserPuzzleStatus
     {
         public int LevelNum { get; set; }
+        public int LevelPuzzleCount { get; set; }
         public int LoopNum { get; set; }
         public int LastCompletedPuzzleIndex { get; set; }
         public string CurrentPageToken { get; set; }
@@ -16,7 +17,7 @@ namespace ServerlessFuncs.UserProgress
         public List<Puzzle> Puzzles = new List<Puzzle>();
         public bool GetNextPuzzleSet { get; set; }
         public int TotalPuzzlesCompleted { get; set; }
-        public Dictionary<int, int> PuzzlesCompletedBylevel { get; set; } = new Dictionary<int, int>();
+        public int PuzzlesCompletedForLevel { get; set; }
     }
 }
 

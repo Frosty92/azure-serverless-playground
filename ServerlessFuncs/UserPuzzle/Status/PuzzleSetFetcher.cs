@@ -17,6 +17,13 @@ namespace ServerlessFuncs.UserPuzzle.Status
         public static readonly int START_INDEX = -1;
         private static readonly int MAX_LEVEL = 6;
 
+        public static readonly int PUZZLE_COUNT_LVL_1 = 300;
+        public static readonly int PUZZLE_COUNT_LVL_2 = 300;
+        public static readonly int PUZZLE_COUNT_LVL_3 = 350;
+        public static readonly int PUZZLE_COUNT_LVL_4 = 400;
+        public static readonly int PUZZLE_COUNT_LVL_5 = 500;
+        public static readonly int PUZZLE_COUNT_LVL_6 = 600;
+
         private TableClient PuzzlesTable { get;}
         
        
@@ -38,11 +45,7 @@ namespace ServerlessFuncs.UserPuzzle.Status
                 : await GetPuzzleSet(levelNum, lastCompletedIndex, currentPageToken);
 
             if (puzzleSet.Puzzles.Count > 0 || levelNum + 1 > MAX_LEVEL) return puzzleSet;
-
-            else throw new Exception($"For level:{levelNum}, index: {lastCompletedIndex}, currentPageToken: {currentPageToken}, nextPageToken: {NextPageToken}");
-
-
-            //else return await GetPuzzleSet(levelNum + 1, START_INDEX, null);
+            else return await GetPuzzleSet(levelNum + 1, START_INDEX, null);
         }
 
 
@@ -60,8 +63,8 @@ namespace ServerlessFuncs.UserPuzzle.Status
 
                 puzzleSet.CurrentPageToken = paginationToken;
                 puzzleSet.NextPageToken = page.ContinuationToken;
-
                 puzzleSet.LevelNum = levelNum;
+                puzzleSet.LevelPuzzleCount = GetPuzzleCountForLevel(levelNum);
 
                 int index = lastCompletedIndex + 1;
                 for (int i = index; i < puzzlesPage.Count; i++)
@@ -72,6 +75,24 @@ namespace ServerlessFuncs.UserPuzzle.Status
                 break;
             }
             return puzzleSet;
+        }
+
+        private int GetPuzzleCountForLevel(int levelNum)
+        {
+            var dict = new Dictionary<int, int>();
+            dict[1] = PUZZLE_COUNT_LVL_1;
+            dict[2] = PUZZLE_COUNT_LVL_2;
+            dict[3] = PUZZLE_COUNT_LVL_3;
+            dict[4] = PUZZLE_COUNT_LVL_4;
+            dict[5] = PUZZLE_COUNT_LVL_5;
+            dict[6] = PUZZLE_COUNT_LVL_6;
+
+            if (dict.ContainsKey(levelNum) == false)
+            {
+                throw new ArgumentOutOfRangeException($"LevelNum: {levelNum} has no PuzzleCount stat");
+            }
+
+            return dict[levelNum];
         }
     }
 }
