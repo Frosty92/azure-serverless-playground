@@ -9,16 +9,12 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Azure.Data.Tables;
 using ServerlessFuncs.UserPuzzle.Progress;
-using Microsoft.WindowsAzure.Storage.Table;
-using System.Reflection.Emit;
-using ServerlessFuncs.Puzzles;
 using Azure;
-using AzureFunctionsTodo.TableStorage;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
 using ServerlessFuncs.PuzzleNS;
 using ServerlessFuncs.UserPuzzle.Status;
+using System.Security.Claims;
+using System.Diagnostics;
+
 
 namespace ServerlessFuncs.UserProgress
 {
@@ -27,7 +23,6 @@ namespace ServerlessFuncs.UserProgress
         private const string Route = "userPuzzleStatus";
         private const string UserPuzzleStatusTable = "userPuzzleStatus";
         private const string PuzzlesTable = "puzzles";
-        private const string UserPuzzleHistoryTable = "userPuzzleHistory";
 
 
         [FunctionName("GetUserPuzzleStatus")]
@@ -36,11 +31,24 @@ namespace ServerlessFuncs.UserProgress
             [Table(UserPuzzleStatusTable, "{userID}","{userID}", Connection = "AzureWebJobsStorage")] UserPuzzleStatusEntity progressEntity,
             [Table(PuzzlesTable, Connection = "AzureWebJobsStorage")] TableClient puzzlesTable,
             ILogger log,
-            string userID
+            string userID,
+            ClaimsPrincipal principal
             )
         {
             try
             {
+                bool isValid = ValidateUserID(principal, userID, req.Headers);
+                if (isValid == false)
+                {
+                    return new UnauthorizedResult();
+                }
+
+                foreach (Claim claim in principal.Claims)
+                {
+                    Debug.WriteLine(claim.Type + " : " + claim.Value + "\n");
+                    log.LogInformation(claim.Type + " : " + claim.Value + "\n");
+                }
+                
                 UserPuzzleStatus puzzleStatus;
                 if (progressEntity == null)
                 {
@@ -165,7 +173,7 @@ namespace ServerlessFuncs.UserProgress
             var puzzleSetFetcher = new PuzzleSetFetcher(puzzlesTable);
             var puzzleSet = await puzzleSetFetcher.FetchPuzzleSet(
                 levelNum,
-                PuzzleSetFetcher.PUZZLES_PER_PAGE - 1,
+                PuzzleSetFetcher.PUZZLES_PER_PAGE - 1, //this will trigger the next sequence to load
                 null,
                 nextPageToken
                 );
@@ -189,6 +197,26 @@ namespace ServerlessFuncs.UserProgress
             userStatus.LevelNum = puzzleSet.LevelNum;
             userStatus.LastCompletedPuzzleIndex = puzzleSet.LastCompletedPuzzleIndex;
             userStatus.LevelPuzzleCount = puzzleSet.LevelPuzzleCount;
+        }
+
+        private static bool ValidateUserID(ClaimsPrincipal principle, string userID, IHeaderDictionary headers)
+        {
+            if (headers.ContainsKey("Host"))
+            {
+                string host = headers["Host"];
+                if (host.Contains("localhost")) return true;
+            }
+            foreach (Claim claim in principle.Claims)
+            {
+                if (claim.Type == "http://schemas.microsoft.com/identity/claims/objectidentifier")
+                {
+                   
+                    string tokenUserID = claim.Value;
+                    return tokenUserID == userID;
+                }
+                Debug.WriteLine(claim.Type + " : " + claim.Value + "\n");
+            }
+            return true;
         }
     }
 }
