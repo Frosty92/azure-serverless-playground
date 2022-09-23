@@ -14,6 +14,7 @@ using ServerlessFuncs.PuzzleNS;
 using ServerlessFuncs.UserPuzzle.Status;
 using System.Security.Claims;
 using System.Diagnostics;
+using System.Security.Principal;
 
 
 namespace ServerlessFuncs.UserProgress
@@ -86,11 +87,18 @@ namespace ServerlessFuncs.UserProgress
             [Table(UserPuzzleStatusTable, Connection = "AzureWebJobsStorage")] IAsyncCollector<UserPuzzleStatusEntity> progressTable,
             [Table(PuzzlesTable, Connection = "AzureWebJobsStorage")] TableClient puzzlesTable,
             ILogger log,
-            string userID
+            string userID,
+            ClaimsPrincipal principal
             )
         {
             try
             {
+                bool isValid = ValidateUserID(principal, userID, req.Headers);
+                if (isValid == false)
+                {
+                    return new UnauthorizedResult();
+                }
+
                 string reqBody = await new StreamReader(req.Body).ReadToEndAsync();
                 UserPuzzleStatus puzzStatus = JsonConvert.DeserializeObject<UserPuzzleStatus>(reqBody);
 
@@ -118,12 +126,20 @@ namespace ServerlessFuncs.UserProgress
             [Table(UserPuzzleStatusTable, "{userID}", Connection = "AzureWebJobsStorage")] TableClient progressTable,
             [Table(PuzzlesTable, Connection = "AzureWebJobsStorage")] TableClient puzzlesTable,
             ILogger log,
-            string userID
+            string userID,
+            ClaimsPrincipal principal
             )
         {
 
             try
             {
+                bool isValid = ValidateUserID(principal, userID, req.Headers);
+                if (isValid == false)
+                {
+                    return new UnauthorizedResult();
+                }
+
+
                 string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
                 var updatedEntity = JsonConvert.DeserializeObject<UserPuzzleStatus>(requestBody);
 
