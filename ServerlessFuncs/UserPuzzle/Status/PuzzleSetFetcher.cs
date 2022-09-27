@@ -13,7 +13,7 @@ namespace ServerlessFuncs.UserPuzzle.Status
     public class PuzzleSetFetcher
     {
 
-        public static readonly int PUZZLES_PER_PAGE = 10;
+        public static readonly int PUZZLES_PER_PAGE = 15;
         public static readonly int START_INDEX = -1;
         private static readonly int MAX_LEVEL = 6;
 
@@ -34,35 +34,35 @@ namespace ServerlessFuncs.UserPuzzle.Status
 
         public async Task<PuzzleSet> FetchPuzzleSet(
             int levelNum,
-            int lastCompletedIndex,
-            string currentPageToken,
-            string NextPageToken
+            int subLevel,
+            int lastCompletedIndex
         )
         {
 
             PuzzleSet puzzleSet = lastCompletedIndex == PUZZLES_PER_PAGE - 1
-                ? await GetPuzzleSet(levelNum, START_INDEX, NextPageToken)
-                : await GetPuzzleSet(levelNum, lastCompletedIndex, currentPageToken);
+                ? await GetPuzzleSet(levelNum, subLevel + 1, START_INDEX)
+                : await GetPuzzleSet(levelNum, subLevel, lastCompletedIndex);
 
             if (puzzleSet.Puzzles.Count > 0 || levelNum + 1 > MAX_LEVEL) return puzzleSet;
-            else return await GetPuzzleSet(levelNum + 1, START_INDEX, null);
+            else return await GetPuzzleSet(levelNum + 1, 1, START_INDEX);
         }
 
 
-        private async Task<PuzzleSet> GetPuzzleSet(int levelNum,int lastCompletedIndex,string paginationToken)
+        private async Task<PuzzleSet> GetPuzzleSet(int levelNum, int subLevel ,int lastCompletedIndex)
         {
             var puzzleSet = new PuzzleSet();
             puzzleSet.LastCompletedPuzzleIndex = lastCompletedIndex;
 
+            string partitionKey = $"{levelNum}_{subLevel}";
+
             string filter = $"partitionKey eq '{levelNum}'";
             await foreach (Page<PuzzleEntity> page in PuzzlesTable.QueryAsync<PuzzleEntity>(
                     e => e.PartitionKey == levelNum.ToString()
-                    ).AsPages(paginationToken, PUZZLES_PER_PAGE))
+                    ).AsPages(null, PUZZLES_PER_PAGE))
             {
                 List<PuzzleEntity> puzzlesPage = page.Values.ToList();
 
-                puzzleSet.CurrentPageToken = paginationToken;
-                puzzleSet.NextPageToken = page.ContinuationToken;
+                puzzleSet.SubLevel = subLevel;
                 puzzleSet.LevelNum = levelNum;
                 puzzleSet.LevelPuzzleCount = GetPuzzleCountForLevel(levelNum);
 

@@ -3,15 +3,14 @@ namespace ServerlessFuncs.Puzzles
 {
     public static class Mappings
     {
-        public static PuzzleEntity ToPuzzleEntity(this Puzzle puzzle, int partitionKey)
+        public static PuzzleEntity ToPuzzleEntity(this Puzzle puzzle, string partitionKey)
         {
             return new PuzzleEntity()
             {
-                PartitionKey = partitionKey.ToString(),
+                PartitionKey = partitionKey,
                 RowKey = puzzle.Id,
                 Fen = puzzle.Fen,
                 Moves = puzzle.Moves,
-                Tags = puzzle.Tags,
                 Rating = puzzle.Rating,
                 URL = puzzle.URL
                 
@@ -25,7 +24,6 @@ namespace ServerlessFuncs.Puzzles
                 Id = puzzleEntity.RowKey,
                 Fen = puzzleEntity.Fen,
                 Moves = puzzleEntity.Moves,
-                Tags = puzzleEntity.Tags,
                 Rating = puzzleEntity.Rating,
                 URL = puzzleEntity.URL
             };

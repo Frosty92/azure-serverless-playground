@@ -105,7 +105,7 @@ namespace ServerlessFuncs.UserProgress
                 await progressTable.AddAsync(puzzStatus.ToUserPuzzleStatusEntity(userID));
                 if (puzzStatus.GetNextPuzzleSet)
                 {
-                    var nextPuzzleSet = await GetNextPuzzleSet(puzzlesTable, puzzStatus.LevelNum, puzzStatus.NextPageToken);
+                    var nextPuzzleSet = await GetNextPuzzleSet(puzzlesTable, puzzStatus.LevelNum, puzzStatus.SubLevel);
                     return new OkObjectResult(nextPuzzleSet);
                 }
                 else
@@ -157,9 +157,8 @@ namespace ServerlessFuncs.UserProgress
 
                 existingRow.LastCompletedPuzzleIndex = updatedEntity.LastCompletedPuzzleIndex;
                 existingRow.LevelNum = updatedEntity.LevelNum;
+                existingRow.SubLevel = updatedEntity.SubLevel;
                 existingRow.LoopNum = updatedEntity.LoopNum;
-                existingRow.CurrentPageToken = updatedEntity.CurrentPageToken;
-                existingRow.NextPageToken = updatedEntity.NextPageToken;
                 existingRow.UserRating = updatedEntity.UserRating;
                 existingRow.PuzzlesCompletedForLevel = updatedEntity.PuzzlesCompletedForLevel;
                 existingRow.TotalPuzzlesCompleted = updatedEntity.TotalPuzzlesCompleted;
@@ -168,7 +167,7 @@ namespace ServerlessFuncs.UserProgress
 
                 if (updatedEntity.GetNextPuzzleSet)
                 {
-                    var nextPuzzleSet = await GetNextPuzzleSet(puzzlesTable, updatedEntity.LevelNum, updatedEntity.NextPageToken);
+                    var nextPuzzleSet = await GetNextPuzzleSet(puzzlesTable, updatedEntity.LevelNum, updatedEntity.SubLevel);
                     return new OkObjectResult(nextPuzzleSet);
                 } else
                 {
@@ -184,14 +183,13 @@ namespace ServerlessFuncs.UserProgress
 
 
 
-        private static async Task<PuzzleSet> GetNextPuzzleSet(TableClient puzzlesTable, int levelNum, string nextPageToken)
+        private static async Task<PuzzleSet> GetNextPuzzleSet(TableClient puzzlesTable, int levelNum, int subLevel)
         {
             var puzzleSetFetcher = new PuzzleSetFetcher(puzzlesTable);
             var puzzleSet = await puzzleSetFetcher.FetchPuzzleSet(
                 levelNum,
-                PuzzleSetFetcher.PUZZLES_PER_PAGE - 1, //this will trigger the next sequence to load
-                null,
-                nextPageToken
+                subLevel,
+                PuzzleSetFetcher.PUZZLES_PER_PAGE - 1 //this will trigger the next sequence to load
                 );
 
             return puzzleSet;
@@ -202,14 +200,12 @@ namespace ServerlessFuncs.UserProgress
             var puzzleSetFetcher = new PuzzleSetFetcher(puzzlesTable);
             var puzzleSet = await puzzleSetFetcher.FetchPuzzleSet(
                 userStatus.LevelNum,
-                userStatus.LastCompletedPuzzleIndex,
-                userStatus.CurrentPageToken,
-                userStatus.NextPageToken
+                userStatus.SubLevel,
+                userStatus.LastCompletedPuzzleIndex
                 );
 
             userStatus.Puzzles = puzzleSet.Puzzles;
-            userStatus.CurrentPageToken = puzzleSet.CurrentPageToken;
-            userStatus.NextPageToken = puzzleSet.NextPageToken;
+            userStatus.SubLevel = puzzleSet.SubLevel;
             userStatus.LevelNum = puzzleSet.LevelNum;
             userStatus.LastCompletedPuzzleIndex = puzzleSet.LastCompletedPuzzleIndex;
             userStatus.LevelPuzzleCount = puzzleSet.LevelPuzzleCount;

@@ -16,8 +16,7 @@ namespace ServerlessFuncs.UserPuzzle.Progress
                 LoopNum = puzzleEntity.LoopNum,
                 UserRating = puzzleEntity.UserRating,
                 LastCompletedPuzzleIndex = puzzleEntity.LastCompletedPuzzleIndex,
-                NextPageToken = puzzleEntity.NextPageToken,
-                CurrentPageToken = puzzleEntity.CurrentPageToken,
+                SubLevel = puzzleEntity.SubLevel,
                 PuzzlesCompletedForLevel = puzzleEntity.PuzzlesCompletedForLevel,
                 TotalPuzzlesCompleted = puzzleEntity.TotalPuzzlesCompleted,
             };
@@ -32,10 +31,9 @@ namespace ServerlessFuncs.UserPuzzle.Progress
                 RowKey = userID,
                 LastCompletedPuzzleIndex = puzzleProgress.LastCompletedPuzzleIndex,
                 LevelNum = puzzleProgress.LevelNum,
+                SubLevel = puzzleProgress.SubLevel,
                 UserRating = puzzleProgress.UserRating,
-                NextPageToken = puzzleProgress.NextPageToken,
                 LoopNum = puzzleProgress.LoopNum,
-                CurrentPageToken = puzzleProgress.CurrentPageToken,
                 PuzzlesCompletedForLevel = puzzleProgress.PuzzlesCompletedForLevel,
                 TotalPuzzlesCompleted = puzzleProgress.TotalPuzzlesCompleted
             };

@@ -26,12 +26,23 @@ namespace ServerlessFuncs.TableStorage
             {
                 var puzzles = new List<Puzzle>();
                 var pEntities = new List<PuzzleEntity>();
-                for (int level = 2; level <= 6; level++)
+                for (int level = 3; level <= 6; level++)
                 {
                     puzzles = PuzzlesUploader.GetPuzzles(level);
+
+                    int subLevel = 1;
+                    int counter = 0;
                     foreach (var p in puzzles)
                     {
-                        await puzzleTable.AddAsync(p.ToPuzzleEntity(level));
+
+                        ++counter;
+                        if (counter % 15 == 0)
+                        {
+                            ++subLevel;
+                        }
+
+                        string partitionKey = $"{level}_{subLevel}";
+                        await puzzleTable.AddAsync(p.ToPuzzleEntity(partitionKey));
                     }
                 }
 

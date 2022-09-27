@@ -10,8 +10,7 @@ namespace ServerlessFuncs.UserPuzzle.Progress
         public int LoopNum { get; set; }
         public int LastCompletedPuzzleIndex { get; set; }
         public int LevelNum { get; set; }
-        public string NextPageToken { get; set; }
-        public string CurrentPageToken { get; set; }
+        public int SubLevel { get; set; }
         public int UserRating { get; set; }
         public int TotalPuzzlesCompleted { get; set; }
         public int PuzzlesCompletedForLevel { get; set; }

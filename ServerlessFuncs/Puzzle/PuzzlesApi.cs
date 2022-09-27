@@ -28,19 +28,16 @@ namespace ServerlessFuncs.Puzzles
         [FunctionName("GetPuzzlesForLevel")]
         public static async Task<IActionResult> GetPuzzlesForLevel(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = Route + "/{level}")] HttpRequest req,
-            [Table(TableName,"{level}", Connection = "AzureWebJobsStorage")] TableClient puzzlesTable,
+            [Table(TableName, Connection = "AzureWebJobsStorage")] TableClient puzzlesTable,
             ILogger log,
             int level)
         {
-            string currentPageToken = req.Query["currentPageToken"];
-            string nextPageToken = req.Query["nextPageToken"];
-
+            int subLevel = Convert.ToInt16(req.Query["subLevel"]);
             var puzzleSetFetcher = new PuzzleSetFetcher(puzzlesTable);
             var puzzleSet = await puzzleSetFetcher.FetchPuzzleSet(
                 level,
-                0,
-                currentPageToken,
-                nextPageToken
+                subLevel,
+                0       
             );
 
             return new OkObjectResult(puzzleSet);
