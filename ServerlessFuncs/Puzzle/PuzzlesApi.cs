@@ -33,6 +33,7 @@ namespace ServerlessFuncs.Puzzles
             int level)
         {
             int subLevel = Convert.ToInt16(req.Query["subLevel"]);
+            Trace.WriteLine($"partition key is: {level}_{subLevel}");
             var puzzleSetFetcher = new PuzzleSetFetcher(puzzlesTable);
             var puzzleSet = await puzzleSetFetcher.FetchPuzzleSet(
                 level,

@@ -7,6 +7,7 @@ using ServerlessFuncs.PuzzleNS;
 using System.Threading.Tasks;
 using ServerlessFuncs.Puzzles;
 using System.Linq;
+using System.Diagnostics;
 
 namespace ServerlessFuncs.UserPuzzle.Status
 {
@@ -54,10 +55,8 @@ namespace ServerlessFuncs.UserPuzzle.Status
             puzzleSet.LastCompletedPuzzleIndex = lastCompletedIndex;
 
             string partitionKey = $"{levelNum}_{subLevel}";
-
-            string filter = $"partitionKey eq '{levelNum}'";
             await foreach (Page<PuzzleEntity> page in PuzzlesTable.QueryAsync<PuzzleEntity>(
-                    e => e.PartitionKey == levelNum.ToString()
+                    e => e.PartitionKey == partitionKey
                     ).AsPages(null, PUZZLES_PER_PAGE))
             {
                 List<PuzzleEntity> puzzlesPage = page.Values.ToList();

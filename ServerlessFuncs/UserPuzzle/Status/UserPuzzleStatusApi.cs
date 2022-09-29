@@ -60,6 +60,7 @@ namespace ServerlessFuncs.UserProgress
                         LastCompletedPuzzleIndex = -1,
                         UserRating = 1200,
                         IsNewUser = true,
+                        SubLevel = 1,
                     };
                     puzzleStatus.PuzzlesCompletedForLevel = 0;
                     puzzleStatus.LevelPuzzleCount = PuzzleSetFetcher.PUZZLE_COUNT_LVL_1;
@@ -228,7 +229,7 @@ namespace ServerlessFuncs.UserProgress
                 }
                 Debug.WriteLine(claim.Type + " : " + claim.Value + "\n");
             }
-            return true;
+            return false;
         }
     }
 }
