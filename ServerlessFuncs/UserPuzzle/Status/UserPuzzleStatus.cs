@@ -6,6 +6,7 @@ namespace ServerlessFuncs.UserProgress
 {
     public class UserPuzzleStatus
     {
+        public string UserName { get; set; }
         public int LevelNum { get; set; }
         public int SubLevel { get; set; }
         public int LevelPuzzleCount { get; set; }

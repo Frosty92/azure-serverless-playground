@@ -19,6 +19,7 @@ namespace ServerlessFuncs.UserPuzzle.Progress
                 SubLevel = puzzleEntity.SubLevel,
                 PuzzlesCompletedForLevel = puzzleEntity.PuzzlesCompletedForLevel,
                 TotalPuzzlesCompleted = puzzleEntity.TotalPuzzlesCompleted,
+                UserName = puzzleEntity.UserName
             };
         }
 
@@ -35,7 +36,8 @@ namespace ServerlessFuncs.UserPuzzle.Progress
                 UserRating = puzzleProgress.UserRating,
                 LoopNum = puzzleProgress.LoopNum,
                 PuzzlesCompletedForLevel = puzzleProgress.PuzzlesCompletedForLevel,
-                TotalPuzzlesCompleted = puzzleProgress.TotalPuzzlesCompleted
+                TotalPuzzlesCompleted = puzzleProgress.TotalPuzzlesCompleted,
+                UserName = puzzleProgress.UserName
             };
         }
     }

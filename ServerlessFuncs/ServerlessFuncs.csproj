@@ -6,12 +6,19 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Sdk.Functions" Version="4.1.1" />
     <PackageReference Include="Microsoft.Azure.WebJobs.Extensions.Tables" Version="1.0.0" />
+    <PackageReference Include="Microsoft.Identity.Client" Version="4.47.1" />
+    <PackageReference Include="Microsoft.Graph" Version="4.42.0" />
   </ItemGroup>
   <ItemGroup>
     <None Remove="Microsoft.Azure.WebJobs.Extensions.Storage" />
     <None Remove="Microsoft.Azure.WebJobs.Extensions.Tables" />
     <None Remove="Utils\" />
     <None Remove="UserPuzzle\History\" />
+    <None Remove="Microsoft.Identity.Client" />
+    <None Remove="Microsoft.Graph" />
+    <None Remove="Microsoft.Identity.Web.MicrosoftGraph" />
+    <None Remove="User\" />
+    <None Remove="User\UserGraphProfile" />
   </ItemGroup>
   <ItemGroup>
     <None Update="host.json">
@@ -25,5 +32,6 @@
   <ItemGroup>
     <Folder Include="Utils\" />
     <Folder Include="UserPuzzle\History\" />
+    <Folder Include="User\" />
   </ItemGroup>
 </Project>

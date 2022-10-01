@@ -1,11 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using AzureFunctionsTodo.TableStorage;
-using ServerlessFuncs.Utils;
+using ServerlessFuncs.Puzzles;
 
-namespace ServerlessFuncs.UserPuzzle.Progress
+namespace ServerlessFuncs.User
 {
-    public class UserPuzzleStatusEntity : BaseTableEntity
+    public class UserProfile
     {
         public int LoopNum { get; set; }
         public int LastCompletedPuzzleIndex { get; set; }
@@ -15,6 +14,9 @@ namespace ServerlessFuncs.UserPuzzle.Progress
         public int TotalPuzzlesCompleted { get; set; }
         public int PuzzlesCompletedForLevel { get; set; }
         public string UserName { get; set; }
+        public int LevelPuzzleCount { get; set; }
+        public bool GetNextPuzzleSet { get; set; }
+        public List<Puzzle> Puzzles = new List<Puzzle>();
     }
 }
 
