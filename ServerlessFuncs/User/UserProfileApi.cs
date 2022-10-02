@@ -26,6 +26,8 @@ namespace ServerlessFuncs.User
         private const string UserProfileTable = "userProfile";
         private const string PuzzlesTable = "puzzles";
 
+        private static ILogger Logger;
+
 
         [FunctionName("GetUserProfile")]
         public static async Task<IActionResult> GetUserProfile(
@@ -39,39 +41,45 @@ namespace ServerlessFuncs.User
         {
             try
             {
-                bool isValid = ValidateUserID(principal, userID, req.Headers);
-                if (isValid == false)
+                Logger = log;
+                bool isAuthenticated = false;
+
+                foreach (var h in req.Headers)
                 {
-                    return new UnauthorizedResult();
+                    log.LogInformation($"{h.Key}: {h.Value}");
                 }
 
-                Trace.WriteLine("CLAIMS ARE: \n");
-                foreach (Claim claim in principal.Claims)
+
+
+                /**
+                 * 
+                 * This endpoint acccepts unauthenticated requests BUT if the principle 
+                 * is present AND is invalid, return unauthorized result.
+                 */
+
+                if (req.Headers.ContainsKey("Authorization"))
                 {
-                    Trace.WriteLine(claim.Type + " : " + claim.Value + "\n");
-                    log.LogInformation(claim.Type + " : " + claim.Value + "\n");
+                    bool claimsValid = ValidateClaimsPrinciple(principal, userID, req.Headers);
+                  if (claimsValid == false)
+                  {
+                    return new UnauthorizedResult();
+                  }
+                    else isAuthenticated = true;
                 }
+
+
 
                 UserProfile profile;
-                if (progressEntity == null)
+                if (isAuthenticated == false || progressEntity == null)
                 {
-                    profile = new UserProfile()
-                    {
-                        LoopNum = 1,
-                        LevelNum = 1,
-                        LastCompletedPuzzleIndex = -1,
-                        UserRating = 1200,
-                        SubLevel = 1,
-                    };
-                    profile.PuzzlesCompletedForLevel = 0;
-                    profile.LevelPuzzleCount = PuzzleSetFetcher.PUZZLE_COUNT_LVL_1;
+                    profile = GetNewUserProfile();
                 }
                 else
                 {
                     profile = progressEntity.ToUserProfile();
                 }
 
-                if (profile.UserName == null)
+                if (isAuthenticated && profile.UserName == null)
                 {
                     profile.UserName = await new UserProfileFetcher().FetchUserName(userID);
                 }
@@ -101,7 +109,7 @@ namespace ServerlessFuncs.User
         {
             try
             {
-                bool isValid = ValidateUserID(principal, userID, req.Headers);
+                bool isValid = ValidateClaimsPrinciple(principal, userID, req.Headers);
                 if (isValid == false)
                 {
                     return new UnauthorizedResult();
@@ -141,7 +149,7 @@ namespace ServerlessFuncs.User
 
             try
             {
-                bool isValid = ValidateUserID(principal, userID, req.Headers);
+                bool isValid = ValidateClaimsPrinciple(principal, userID, req.Headers);
                 if (isValid == false)
                 {
                     return new UnauthorizedResult();
@@ -191,6 +199,19 @@ namespace ServerlessFuncs.User
         }
 
 
+        private static UserProfile GetNewUserProfile()
+        {
+            return new UserProfile()
+            {
+                LoopNum = 1,
+                LevelNum = 1,
+                LastCompletedPuzzleIndex = -1,
+                UserRating = 1200,
+                SubLevel = 1,
+                PuzzlesCompletedForLevel = 0,
+                LevelPuzzleCount = PuzzleSetFetcher.PUZZLE_COUNT_LVL_1
+            };
+        }
 
         private static async Task<PuzzleSet> GetNextPuzzleSet(TableClient puzzlesTable, int levelNum, int subLevel)
         {
@@ -220,23 +241,45 @@ namespace ServerlessFuncs.User
             userStatus.LevelPuzzleCount = puzzleSet.LevelPuzzleCount;
         }
 
-        private static bool ValidateUserID(ClaimsPrincipal principle, string userID, IHeaderDictionary headers)
+
+
+
+        private static bool ValidateClaimsPrinciple(ClaimsPrincipal principle, string userID, IHeaderDictionary headers)
         {
+
+            bool isUserIDValid = false;
+            bool isClaimExpired = true;
+
             if (headers.ContainsKey("Host"))
             {
                 string host = headers["Host"];
-                if (host.Contains("localhost")) return true;
+                if (host.Contains("localhost")) return false;
             }
             foreach (Claim claim in principle.Claims)
             {
                 if (claim.Type == "http://schemas.microsoft.com/identity/claims/objectidentifier")
                 {
-
                     string tokenUserID = claim.Value;
-                    return tokenUserID == userID;
+                    if (tokenUserID == userID)
+                    {
+                        isUserIDValid = true;
+                    }
+                }
+
+                else if (claim.Type == "exp")
+                {
+                    long unixTimeStamp = DateTimeOffset.Now.ToUnixTimeSeconds();
+
+                    long claimExpiry = Convert.ToInt64(claim.Value);
+
+                    isClaimExpired = claimExpiry < unixTimeStamp;
+
+                    Logger.LogInformation($"unixTimeStamo: {unixTimeStamp}. claimsExpiry: {claimExpiry}. IsExpired ? {isClaimExpired}");
                 }
             }
-            return false;
+
+            bool isValid = isUserIDValid && isClaimExpired == false;
+            return isValid;
         }
     }
 }
