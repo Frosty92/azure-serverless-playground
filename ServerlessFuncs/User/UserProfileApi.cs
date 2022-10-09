@@ -16,6 +16,11 @@ using System.Diagnostics;
 using System.IO;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using ServerlessFuncs.Auth;
+using ServerlessFuncs.History;
+using System.Collections.Generic;
+using Microsoft.WindowsAzure.Storage.Table;
+using ITableEntity = Microsoft.WindowsAzure.Storage.Table.ITableEntity;
 
 namespace ServerlessFuncs.User
 {
@@ -25,8 +30,6 @@ namespace ServerlessFuncs.User
         private const string Route = "userProfile";
         private const string UserProfileTable = "userProfile";
         private const string PuzzlesTable = "puzzles";
-
-        private static ILogger Logger;
 
 
         [FunctionName("GetUserProfile")]
@@ -41,15 +44,7 @@ namespace ServerlessFuncs.User
         {
             try
             {
-                Logger = log;
                 bool isAuthenticated = false;
-
-                foreach (var h in req.Headers)
-                {
-                    log.LogInformation($"{h.Key}: {h.Value}");
-                }
-
-
 
                 /**
                  * 
@@ -59,7 +54,7 @@ namespace ServerlessFuncs.User
 
                 if (req.Headers.ContainsKey("Authorization"))
                 {
-                    bool claimsValid = ValidateClaimsPrinciple(principal, userID, req.Headers);
+                    bool claimsValid = ClaimsPrincipleValidator.Validate(principal, userID, req.Headers);
                   if (claimsValid == false)
                   {
                     return new UnauthorizedResult();
@@ -109,7 +104,7 @@ namespace ServerlessFuncs.User
         {
             try
             {
-                bool isValid = ValidateClaimsPrinciple(principal, userID, req.Headers);
+                bool isValid = ClaimsPrincipleValidator.Validate(principal, userID, req.Headers);
                 if (isValid == false)
                 {
                     return new UnauthorizedResult();
@@ -149,7 +144,7 @@ namespace ServerlessFuncs.User
 
             try
             {
-                bool isValid = ValidateClaimsPrinciple(principal, userID, req.Headers);
+                bool isValid = ClaimsPrincipleValidator.Validate(principal, userID, req.Headers);
                 if (isValid == false)
                 {
                     return new UnauthorizedResult();
@@ -242,44 +237,22 @@ namespace ServerlessFuncs.User
         }
 
 
-
-
-        private static bool ValidateClaimsPrinciple(ClaimsPrincipal principle, string userID, IHeaderDictionary headers)
+        private static async Task PostCompletedPuzzleHistory(TableClient historyTable, List<UserPuzzleHistory> historyList, string userID) 
         {
 
-            bool isUserIDValid = false;
-            bool isClaimExpired = true;
 
-            if (headers.ContainsKey("Host"))
+            var batchTrans  = new List<TableTransactionAction>();
+
+            foreach (var h in historyList)
             {
-                string host = headers["Host"];
-                if (host.Contains("localhost")) return false;
-            }
-            foreach (Claim claim in principle.Claims)
-            {
-                if (claim.Type == "http://schemas.microsoft.com/identity/claims/objectidentifier")
-                {
-                    string tokenUserID = claim.Value;
-                    if (tokenUserID == userID)
-                    {
-                        isUserIDValid = true;
-                    }
-                }
+                var historyEntity = (Azure.Data.Tables.ITableEntity)h.ToUserPuzzleHistoryEntity(userID);
 
-                else if (claim.Type == "exp")
-                {
-                    long unixTimeStamp = DateTimeOffset.Now.ToUnixTimeSeconds();
-
-                    long claimExpiry = Convert.ToInt64(claim.Value);
-
-                    isClaimExpired = claimExpiry < unixTimeStamp;
-
-                    Logger.LogInformation($"unixTimeStamo: {unixTimeStamp}. claimsExpiry: {claimExpiry}. IsExpired ? {isClaimExpired}");
-                }
+                var transEntity = new TableTransactionAction(TableTransactionActionType.Add, historyEntity);
+                batchTrans.Add(transEntity);
             }
 
-            bool isValid = isUserIDValid && isClaimExpired == false;
-            return isValid;
+            await historyTable.SubmitTransactionAsync(batchTrans);
+
         }
     }
 }

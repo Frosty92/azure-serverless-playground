@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using AzureFunctionsTodo.TableStorage;
-using ServerlessFuncs.Utils;
+using ServerlessFuncs.Database;
 
 namespace ServerlessFuncs.UserPuzzle.Progress
 {

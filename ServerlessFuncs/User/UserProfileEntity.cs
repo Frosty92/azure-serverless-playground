@@ -1,5 +1,6 @@
 ﻿using System;
-using ServerlessFuncs.Utils;
+using System.Collections.Generic;
+using ServerlessFuncs.Database;
 
 namespace ServerlessFuncs.User
 {

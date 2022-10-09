@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using ServerlessFuncs.History;
 using ServerlessFuncs.Puzzles;
 
 namespace ServerlessFuncs.User
@@ -17,6 +18,8 @@ namespace ServerlessFuncs.User
         public int LevelPuzzleCount { get; set; }
         public bool GetNextPuzzleSet { get; set; }
         public List<Puzzle> Puzzles = new List<Puzzle>();
+        public List<UserPuzzleHistory> History = new List<UserPuzzleHistory>();
+
     }
 }
 

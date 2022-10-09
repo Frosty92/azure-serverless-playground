@@ -1,7 +1,7 @@
 ﻿using Azure;
 using Azure.Data.Tables;
+using ServerlessFuncs.Database;
 using ServerlessFuncs.TableStorage;
-using ServerlessFuncs.Utils;
 using System;
 
 namespace AzureFunctionsTodo.TableStorage

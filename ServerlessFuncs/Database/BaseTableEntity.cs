@@ -2,7 +2,7 @@
 using Azure;
 using Azure.Data.Tables;
 
-namespace ServerlessFuncs.Utils
+namespace ServerlessFuncs.Database
 {
     public class BaseTableEntity : ITableEntity
     {

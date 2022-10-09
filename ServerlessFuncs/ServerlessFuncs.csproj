@@ -12,13 +12,14 @@
   <ItemGroup>
     <None Remove="Microsoft.Azure.WebJobs.Extensions.Storage" />
     <None Remove="Microsoft.Azure.WebJobs.Extensions.Tables" />
-    <None Remove="Utils\" />
     <None Remove="UserPuzzle\History\" />
     <None Remove="Microsoft.Identity.Client" />
     <None Remove="Microsoft.Graph" />
     <None Remove="Microsoft.Identity.Web.MicrosoftGraph" />
     <None Remove="User\" />
     <None Remove="User\UserGraphProfile" />
+    <None Remove="Auth\" />
+    <None Remove="Database\" />
   </ItemGroup>
   <ItemGroup>
     <None Update="host.json">
@@ -30,8 +31,9 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Utils\" />
     <Folder Include="UserPuzzle\History\" />
     <Folder Include="User\" />
+    <Folder Include="Auth\" />
+    <Folder Include="Database\" />
   </ItemGroup>
 </Project>

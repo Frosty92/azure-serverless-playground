@@ -1,5 +1,5 @@
 ﻿using System;
-using ServerlessFuncs.Utils;
+using ServerlessFuncs.Database;
 
 namespace ServerlessFuncs.Puzzles
 {
