@@ -106,6 +106,13 @@ namespace ServerlessFuncs.User
         {
             try
             {
+                bool isValid = ClaimsPrincipleValidator.Validate(principal, userID, req.Headers);
+                if (isValid == false)
+                {
+                    return new UnauthorizedResult();
+                }
+
+
                 string reqBody = await new StreamReader(req.Body).ReadToEndAsync();
                 UserProfile userProfile = JsonConvert.DeserializeObject<UserProfile>(reqBody);
                 UserProfileEntity entity = userProfile.ToUserProfileEntity(userID);
@@ -138,21 +145,6 @@ namespace ServerlessFuncs.User
         }
 
 
-        /**
-         * 
-            await PostCompletedPuzzleHistory(historyTable, puzzStatus.History, userID);
-
-            if (puzzStatus.GetNextPuzzleSet)
-            {
-                var nextPuzzleSet = await GetNextPuzzleSet(puzzlesTable, puzzStatus.LevelNum, puzzStatus.SubLevel);
-                return new OkObjectResult(nextPuzzleSet);
-            }
-             else
-            {
-                return new OkResult();
-            }
-         */
-
 
         [FunctionName("UpdateUserProfile")]
         public static async Task<IActionResult> UpdateUserProfile(
@@ -168,11 +160,11 @@ namespace ServerlessFuncs.User
 
             try
             {
-                //bool isValid = ClaimsPrincipleValidator.Validate(principal, userID, req.Headers);
-                //if (isValid == false)
-                //{
-                //    return new UnauthorizedResult();
-                //}
+                bool isValid = ClaimsPrincipleValidator.Validate(principal, userID, req.Headers);
+                if (isValid == false)
+                {
+                    return new UnauthorizedResult();
+                }
 
 
                 string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
