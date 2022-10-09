@@ -41,11 +41,11 @@ namespace ServerlessFuncs.History
 
 
 
-                //bool isValid = ClaimsPrincipleValidator.Validate(principal, userID, req.Headers);
-                //if (isValid == false)
-                //{
-                //    return new UnauthorizedResult();
-                //}
+                bool isValid = ClaimsPrincipleValidator.Validate(principal, userID, req.Headers);
+                if (isValid == false)
+                {
+                    return new UnauthorizedResult();
+                }
 
                 var historyList = new UserPuzzleHistoryList();
 

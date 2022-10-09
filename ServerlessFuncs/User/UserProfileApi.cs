@@ -21,6 +21,7 @@ using ServerlessFuncs.History;
 using System.Collections.Generic;
 using Microsoft.WindowsAzure.Storage.Table;
 using ITableEntity = Microsoft.WindowsAzure.Storage.Table.ITableEntity;
+using Microsoft.Graph;
 
 namespace ServerlessFuncs.User
 {
@@ -95,7 +96,7 @@ namespace ServerlessFuncs.User
         [FunctionName("CreateUserProfile")]
         public static async Task<IActionResult> CreateuserProfile(
             [HttpTrigger(AuthorizationLevel.Anonymous, "Post", Route = Route + "/{userID}")] HttpRequest req,
-            [Table(UserProfileTable, Connection = "AzureWebJobsStorage")] IAsyncCollector<UserProfileEntity> progressTable,
+            [Table(UserProfileTable, Connection = "AzureWebJobsStorage")] TableClient profileTable,
             [Table(PuzzlesTable, Connection = "AzureWebJobsStorage")] TableClient puzzlesTable,
             [Table(UserPuzzleHistoryApi.UserPuzzleHistoryTable, Connection = "AzureWebJobsStorage")] TableClient historyTable,
             ILogger log,
@@ -105,33 +106,52 @@ namespace ServerlessFuncs.User
         {
             try
             {
-                bool isValid = ClaimsPrincipleValidator.Validate(principal, userID, req.Headers);
-                if (isValid == false)
-                {
-                    return new UnauthorizedResult();
-                }
-
                 string reqBody = await new StreamReader(req.Body).ReadToEndAsync();
-                UserProfile puzzStatus = JsonConvert.DeserializeObject<UserProfile>(reqBody);
+                UserProfile userProfile = JsonConvert.DeserializeObject<UserProfile>(reqBody);
+                UserProfileEntity entity = userProfile.ToUserProfileEntity(userID);
+                await profileTable.AddEntityAsync(userProfile.ToUserProfileEntity(userID));
 
-                await progressTable.AddAsync(puzzStatus.ToUserProfileEntity(userID));
-                await PostCompletedPuzzleHistory(historyTable, puzzStatus.History, userID);
+                await PostCompletedPuzzleHistory(historyTable, userProfile.History, userID);
 
-                if (puzzStatus.GetNextPuzzleSet)
+                if (userProfile.GetNextPuzzleSet)
                 {
-                    var nextPuzzleSet = await GetNextPuzzleSet(puzzlesTable, puzzStatus.LevelNum, puzzStatus.SubLevel);
+                    var nextPuzzleSet = await GetNextPuzzleSet(puzzlesTable, userProfile.LevelNum, userProfile.SubLevel);
                     return new OkObjectResult(nextPuzzleSet);
                 }
                 else
                 {
                     return new OkResult();
                 }
+
             }
+
+            catch (RequestFailedException ex) when (ex.Status == 409)
+            {
+                return new ConflictResult(); //returns 409 statuscode
+            }
+
             catch (Exception ex)
             {
-                return new BadRequestObjectResult(ex.ToString());
+                log.LogCritical("Caught Generic exception");
+                return new BadRequestResult(); //returns 400 statuscode
             }
         }
+
+
+        /**
+         * 
+            await PostCompletedPuzzleHistory(historyTable, puzzStatus.History, userID);
+
+            if (puzzStatus.GetNextPuzzleSet)
+            {
+                var nextPuzzleSet = await GetNextPuzzleSet(puzzlesTable, puzzStatus.LevelNum, puzzStatus.SubLevel);
+                return new OkObjectResult(nextPuzzleSet);
+            }
+             else
+            {
+                return new OkResult();
+            }
+         */
 
 
         [FunctionName("UpdateUserProfile")]
@@ -148,11 +168,11 @@ namespace ServerlessFuncs.User
 
             try
             {
-                bool isValid = ClaimsPrincipleValidator.Validate(principal, userID, req.Headers);
-                if (isValid == false)
-                {
-                    return new UnauthorizedResult();
-                }
+                //bool isValid = ClaimsPrincipleValidator.Validate(principal, userID, req.Headers);
+                //if (isValid == false)
+                //{
+                //    return new UnauthorizedResult();
+                //}
 
 
                 string requestBody = await new StreamReader(req.Body).ReadToEndAsync();

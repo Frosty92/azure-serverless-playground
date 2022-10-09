@@ -17,7 +17,8 @@ namespace ServerlessFuncs.History
                 Success = entity.Success,
                 PID = entity.PID,
                 PLevel = entity.PLevel,
-                PSubLevel = entity.PSubLevel
+                PSubLevel = entity.PSubLevel,
+                ID = entity.RowKey
             };
         }
 
@@ -25,7 +26,7 @@ namespace ServerlessFuncs.History
         {
             return new UserPuzzleHistoryEntity()
             {
-                RowKey = GetRowKey(),
+                RowKey = history.ID,
                 PartitionKey = userID,
                 RatingAfter = history.RatingAfter,
                 RatingBefore = history.RatingBefore,
