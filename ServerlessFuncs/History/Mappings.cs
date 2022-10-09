@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Globalization;
 using Microsoft.Graph;
+using Microsoft.Graph.ExternalConnectors;
 
 namespace ServerlessFuncs.History
 {
@@ -10,30 +11,29 @@ namespace ServerlessFuncs.History
         {
             return new UserPuzzleHistory()
             {
-                PuzzleID = entity.PuzzleID,
-                PuzzlePartitionKey = entity.PuzzlePartitionKey,
                 RatingAfter = entity.RatingAfter,
                 RatingBefore = entity.RatingBefore,
-                PuzzleCompletionTime = entity.PuzzleCompletionTime,
-                Success = entity.Success
+                PCompSeconds = entity.PCompSeconds,
+                Success = entity.Success,
+                PID = entity.PID,
+                PLevel = entity.PLevel,
+                PSubLevel = entity.PSubLevel
             };
         }
 
-        public static UserPuzzleHistoryEntity ToUserPuzzleHistoryEntity(
-            this UserPuzzleHistory history,
-            string partitionKey
-        )
+        public static UserPuzzleHistoryEntity ToUserPuzzleHistoryEntity(this UserPuzzleHistory history, string userID)
         {
             return new UserPuzzleHistoryEntity()
             {
-                PartitionKey = partitionKey,
                 RowKey = GetRowKey(),
-                PuzzleID = history.PuzzleID,
-                PuzzlePartitionKey = history.PuzzlePartitionKey,
+                PartitionKey = userID,
                 RatingAfter = history.RatingAfter,
                 RatingBefore = history.RatingBefore,
-                PuzzleCompletionTime = history.PuzzleCompletionTime,
-                Success = history.Success
+                PCompSeconds = history.PCompSeconds,
+                Success = history.Success,
+                PID = history.PID,
+                PLevel = history.PLevel,
+                PSubLevel = history.PSubLevel
             };
         }
 
@@ -45,10 +45,11 @@ namespace ServerlessFuncs.History
                             .Subtract(DateTime.UtcNow)
                             .TotalMilliseconds
                             .ToString(CultureInfo.InvariantCulture);
-            return string.Format("{0}-{1}",
+            return string.Format("{0}_{1}",
                                     inverseTimeKey,
                                     Guid.NewGuid().ToString().Substring(0, 5));
         }
+
     }
 }
 

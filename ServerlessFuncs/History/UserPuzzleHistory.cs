@@ -6,10 +6,11 @@ namespace ServerlessFuncs.History
     {
         public int RatingBefore { get; set; }
         public int RatingAfter { get; set; }
-        public int PuzzleCompletionTime { get; set; }
-        public string PuzzleID { get; set; }
-        public string PuzzlePartitionKey { get; set; }
         public bool Success { get; set; }
+        public int? PCompSeconds { get; set; }
+        public string PID { get; set; }
+        public int PLevel { get; set; }
+        public int PSubLevel { get; set; }
     }
 }
 

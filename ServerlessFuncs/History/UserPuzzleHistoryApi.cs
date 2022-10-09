@@ -14,6 +14,7 @@ using Azure;
 using ServerlessFuncs.Puzzles;
 using System.Collections.Generic;
 using System.Linq;
+using System.Diagnostics;
 
 namespace ServerlessFuncs.History
 {
@@ -31,18 +32,20 @@ namespace ServerlessFuncs.History
             [Table(UserPuzzleHistoryTable, "{userID}", Connection = "AzureWebJobsStorage")] TableClient HistoryTable,
             ClaimsPrincipal principal,
             string userID,
-            string paginationToken,
             ILogger log)
         {
 
             try
             {
+                string paginationToken = req.Query["paginationToken"];
 
-                bool isValid = ClaimsPrincipleValidator.Validate(principal, userID, req.Headers);
-                if (isValid == false)
-                {
-                    return new UnauthorizedResult();
-                }
+
+
+                //bool isValid = ClaimsPrincipleValidator.Validate(principal, userID, req.Headers);
+                //if (isValid == false)
+                //{
+                //    return new UnauthorizedResult();
+                //}
 
                 var historyList = new UserPuzzleHistoryList();
 
@@ -63,8 +66,9 @@ namespace ServerlessFuncs.History
 
             } catch (Exception ex)
             {
+                Trace.WriteLine($"Err is: {ex.ToString()}");
                 log.LogError(ex.ToString());
-                return new BadRequestResult();
+                return new BadRequestObjectResult(ex.ToString());
             }
 
         }

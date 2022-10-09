@@ -97,6 +97,7 @@ namespace ServerlessFuncs.User
             [HttpTrigger(AuthorizationLevel.Anonymous, "Post", Route = Route + "/{userID}")] HttpRequest req,
             [Table(UserProfileTable, Connection = "AzureWebJobsStorage")] IAsyncCollector<UserProfileEntity> progressTable,
             [Table(PuzzlesTable, Connection = "AzureWebJobsStorage")] TableClient puzzlesTable,
+            [Table(UserPuzzleHistoryApi.UserPuzzleHistoryTable, Connection = "AzureWebJobsStorage")] TableClient historyTable,
             ILogger log,
             string userID,
             ClaimsPrincipal principal
@@ -114,6 +115,8 @@ namespace ServerlessFuncs.User
                 UserProfile puzzStatus = JsonConvert.DeserializeObject<UserProfile>(reqBody);
 
                 await progressTable.AddAsync(puzzStatus.ToUserProfileEntity(userID));
+                await PostCompletedPuzzleHistory(historyTable, puzzStatus.History, userID);
+
                 if (puzzStatus.GetNextPuzzleSet)
                 {
                     var nextPuzzleSet = await GetNextPuzzleSet(puzzlesTable, puzzStatus.LevelNum, puzzStatus.SubLevel);
@@ -136,6 +139,7 @@ namespace ServerlessFuncs.User
             [HttpTrigger(AuthorizationLevel.Anonymous, "Put", Route = Route + "/{userID}")] HttpRequest req,
             [Table(UserProfileTable, "{userID}", Connection = "AzureWebJobsStorage")] TableClient progressTable,
             [Table(PuzzlesTable, Connection = "AzureWebJobsStorage")] TableClient puzzlesTable,
+            [Table(UserPuzzleHistoryApi.UserPuzzleHistoryTable, Connection = "AzureWebJobsStorage")] TableClient historyTable,
             ILogger log,
             string userID,
             ClaimsPrincipal principal
@@ -175,6 +179,7 @@ namespace ServerlessFuncs.User
                 existingRow.TotalPuzzlesCompleted = updatedEntity.TotalPuzzlesCompleted;
 
                 await progressTable.UpdateEntityAsync(existingRow, existingRow.ETag, TableUpdateMode.Replace);
+                await PostCompletedPuzzleHistory(historyTable, updatedEntity.History, userID);
 
                 if (updatedEntity.GetNextPuzzleSet)
                 {
