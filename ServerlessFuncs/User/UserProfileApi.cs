@@ -211,6 +211,10 @@ namespace ServerlessFuncs.User
         }
 
 
+
+
+
+
         private static UserProfile GetNewUserProfile()
         {
             return new UserProfile()
@@ -221,7 +225,9 @@ namespace ServerlessFuncs.User
                 UserRating = 1200,
                 SubLevel = 1,
                 PuzzlesCompletedForLevel = 0,
-                LevelPuzzleCount = PuzzleSetFetcher.PUZZLE_COUNT_LVL_1
+                LevelPuzzleCount = PuzzleSetFetcher.PUZZLE_COUNT_LVL_1,
+                IsNewUser = true
+                
             };
         }
 
@@ -256,6 +262,8 @@ namespace ServerlessFuncs.User
 
         private static async Task PostCompletedPuzzleHistory(TableClient historyTable, List<UserPuzzleHistory> historyList, string userID) 
         {
+            if (historyList.Count == 0) return;
+            
 
 
             var batchTrans  = new List<TableTransactionAction>();

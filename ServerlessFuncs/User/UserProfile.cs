@@ -19,6 +19,7 @@ namespace ServerlessFuncs.User
         public bool GetNextPuzzleSet { get; set; }
         public List<Puzzle> Puzzles = new List<Puzzle>();
         public List<UserPuzzleHistory> History = new List<UserPuzzleHistory>();
+        public bool IsNewUser { get; set; }
 
     }
 }
