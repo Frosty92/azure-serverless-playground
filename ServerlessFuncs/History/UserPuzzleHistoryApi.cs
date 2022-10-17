@@ -34,18 +34,15 @@ namespace ServerlessFuncs.History
             string userID,
             ILogger log)
         {
-
             try
             {
-                string paginationToken = req.Query["paginationToken"];
-
-
-
                 bool isValid = ClaimsPrincipleValidator.Validate(principal, userID, req.Headers);
                 if (isValid == false)
                 {
                     return new UnauthorizedResult();
                 }
+
+                string paginationToken = req.Query["paginationToken"];
 
                 var historyList = new UserPuzzleHistoryList();
 

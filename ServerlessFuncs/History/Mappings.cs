@@ -18,7 +18,10 @@ namespace ServerlessFuncs.History
                 PID = entity.PID,
                 PLevel = entity.PLevel,
                 PSubLevel = entity.PSubLevel,
-                ID = entity.RowKey
+                PRating = entity.PRating,
+                ID = entity.RowKey,
+                CompletedOn = entity.Timestamp,
+                PFen = entity.PFen
             };
         }
 
@@ -34,23 +37,11 @@ namespace ServerlessFuncs.History
                 Success = history.Success,
                 PID = history.PID,
                 PLevel = history.PLevel,
-                PSubLevel = history.PSubLevel
+                PSubLevel = history.PSubLevel,
+                PRating = history.PRating,
+                PFen = history.PFen
             };
         }
-
-
-        private static string GetRowKey()
-        {
-            var inverseTimeKey = DateTime
-                            .MaxValue
-                            .Subtract(DateTime.UtcNow)
-                            .TotalMilliseconds
-                            .ToString(CultureInfo.InvariantCulture);
-            return string.Format("{0}_{1}",
-                                    inverseTimeKey,
-                                    Guid.NewGuid().ToString().Substring(0, 5));
-        }
-
     }
 }
 
