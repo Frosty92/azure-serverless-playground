@@ -11,17 +11,17 @@ namespace ServerlessFuncs.History
         {
             return new UserPuzzleHistory()
             {
-                RatingAfter = entity.RatingAfter,
-                RatingBefore = entity.RatingBefore,
+
+                RatingDiff = entity.RatingDiff,
                 PCompSeconds = entity.PCompSeconds,
                 Success = entity.Success,
-                PID = entity.PID,
-                PLevel = entity.PLevel,
-                PSubLevel = entity.PSubLevel,
-                PRating = entity.PRating,
                 ID = entity.RowKey,
                 CompletedOn = entity.Timestamp,
-                PFen = entity.PFen
+                PFen = entity.PFen,
+                PID = entity.PID,
+                PLevel = entity.PLevel,
+                PRating = entity.PRating,
+                PMoves = entity.PMoves
             };
         }
 
@@ -31,15 +31,14 @@ namespace ServerlessFuncs.History
             {
                 RowKey = history.ID,
                 PartitionKey = userID,
-                RatingAfter = history.RatingAfter,
-                RatingBefore = history.RatingBefore,
+                RatingDiff = history.RatingDiff,  
                 PCompSeconds = history.PCompSeconds,
                 Success = history.Success,
                 PID = history.PID,
                 PLevel = history.PLevel,
-                PSubLevel = history.PSubLevel,
                 PRating = history.PRating,
-                PFen = history.PFen
+                PFen = history.PFen,
+                PMoves = history.PMoves
             };
         }
     }

@@ -24,7 +24,7 @@ namespace ServerlessFuncs.History
         public const string UserPuzzleHistoryTable = "userPuzzleHistory";
 
         private const string Route = "userPuzzleHistory";
-        private const int ENTITIES_PER_PAGE = 50;
+        private const int ENTITIES_PER_PAGE = 15;
 
         [FunctionName("GetUserPuzzleHistory")]
         public static async Task<IActionResult> Get(
