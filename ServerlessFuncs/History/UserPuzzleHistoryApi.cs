@@ -57,6 +57,7 @@ namespace ServerlessFuncs.History
                     }
 
                     historyList.PaginationToken = page.ContinuationToken;
+                    break;
                 }
 
                 return new OkObjectResult(historyList);

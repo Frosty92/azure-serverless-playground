@@ -18,23 +18,25 @@ namespace ServerlessFuncs.User
                 UserRating = userProfile.UserRating,
                 TotalPuzzlesCompleted  = userProfile.TotalPuzzlesCompleted,
                 PuzzlesCompletedForLevel = userProfile.PuzzlesCompletedForLevel,
-                LastCompletedPuzzleIndex = userProfile.LastCompletedPuzzleIndex
+                LastCompletedPuzzleIndex = userProfile.LastCompletedPuzzleIndex,
+                PuzzlePoints = userProfile.PuzzlePoints
             };
         }
 
 
-        public static UserProfile ToUserProfile(this UserProfileEntity userProfileEntity)
+        public static UserProfile ToUserProfile(this UserProfileEntity entity)
         {
             return new UserProfile()
             {
-                LoopNum = userProfileEntity.LoopNum,
-                LevelNum = userProfileEntity.LevelNum,
-                SubLevel = userProfileEntity.SubLevel,
-                UserName = userProfileEntity.UserName,
-                UserRating = userProfileEntity.UserRating,
-                TotalPuzzlesCompleted = userProfileEntity.TotalPuzzlesCompleted,
-                PuzzlesCompletedForLevel = userProfileEntity.PuzzlesCompletedForLevel,
-                LastCompletedPuzzleIndex = userProfileEntity.LastCompletedPuzzleIndex
+                LoopNum = entity.LoopNum,
+                LevelNum = entity.LevelNum,
+                SubLevel = entity.SubLevel,
+                UserName = entity.UserName,
+                UserRating = entity.UserRating,
+                TotalPuzzlesCompleted = entity.TotalPuzzlesCompleted,
+                PuzzlesCompletedForLevel = entity.PuzzlesCompletedForLevel,
+                LastCompletedPuzzleIndex = entity.LastCompletedPuzzleIndex,
+                PuzzlePoints = entity.PuzzlePoints
             };
         }
     }

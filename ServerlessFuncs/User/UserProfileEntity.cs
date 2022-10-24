@@ -15,6 +15,7 @@ namespace ServerlessFuncs.User
         public int PuzzlesCompletedForLevel { get; set; }
         public string UserName { get; set; }
         public int LevelPuzzleCount { get; set; }
+        public int PuzzlePoints { get; set; }
     }
 }
 
