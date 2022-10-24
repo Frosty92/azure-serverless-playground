@@ -189,6 +189,7 @@ namespace ServerlessFuncs.User
                 existingRow.UserRating = updatedEntity.UserRating;
                 existingRow.PuzzlesCompletedForLevel = updatedEntity.PuzzlesCompletedForLevel;
                 existingRow.TotalPuzzlesCompleted = updatedEntity.TotalPuzzlesCompleted;
+                existingRow.PuzzlePoints = updatedEntity.PuzzlePoints;
 
                 await progressTable.UpdateEntityAsync(existingRow, existingRow.ETag, TableUpdateMode.Replace);
                 await PostCompletedPuzzleHistory(historyTable, updatedEntity.History, userID);
