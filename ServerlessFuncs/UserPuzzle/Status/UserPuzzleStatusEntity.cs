@@ -14,7 +14,6 @@ namespace ServerlessFuncs.UserPuzzle.Progress
         public int UserRating { get; set; }
         public int TotalPuzzlesCompleted { get; set; }
         public int PuzzlesCompletedForLevel { get; set; }
-        public string UserName { get; set; }
     }
 }
 

@@ -9,7 +9,7 @@ using ServerlessFuncs.Puzzles;
 using System.Linq;
 using System.Diagnostics;
 
-namespace ServerlessFuncs.UserPuzzle.Status
+namespace ServerlessFuncs.PuzzleNS
 {
     public class PuzzleSetFetcher
     {

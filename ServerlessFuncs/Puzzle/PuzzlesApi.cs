@@ -15,7 +15,7 @@ using ServerlessFuncs.TableStorage;
 using System.Collections.Generic;
 using System.Linq;
 using System.Diagnostics;
-using ServerlessFuncs.UserPuzzle.Status;
+using ServerlessFuncs.PuzzleNS;
 
 namespace ServerlessFuncs.Puzzles
 {
@@ -33,7 +33,6 @@ namespace ServerlessFuncs.Puzzles
             int level)
         {
             int subLevel = Convert.ToInt16(req.Query["subLevel"]);
-            Trace.WriteLine($"partition key is: {level}_{subLevel}");
             var puzzleSetFetcher = new PuzzleSetFetcher(puzzlesTable);
             var puzzleSet = await puzzleSetFetcher.FetchPuzzleSet(
                 level,

@@ -11,7 +11,6 @@ using Newtonsoft.Json;
 using ServerlessFuncs.PuzzleNS;
 using ServerlessFuncs.UserProgress;
 using ServerlessFuncs.UserPuzzle.Progress;
-using ServerlessFuncs.UserPuzzle.Status;
 using System.Diagnostics;
 using System.IO;
 using System.Security.Claims;
@@ -36,8 +35,6 @@ namespace ServerlessFuncs.User
         [FunctionName("GetUserProfile")]
         public static async Task<IActionResult> GetUserProfile(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = Route + "/{userID}")] HttpRequest req,
-            [Table(UserProfileTable, "{userID}", "{userID}", Connection = "AzureWebJobsStorage")] UserProfileEntity progressEntity,
-            [Table(PuzzlesTable, Connection = "AzureWebJobsStorage")] TableClient puzzlesTable,
             ILogger log,
             string userID,
             ClaimsPrincipal principal
@@ -45,47 +42,17 @@ namespace ServerlessFuncs.User
         {
             try
             {
-                bool isAuthenticated = false;
-
-                /**
-                 * 
-                 * This endpoint acccepts unauthenticated requests BUT if the principle 
-                 * is present AND is invalid, return unauthorized result.
-                 */
-
-                if (req.Headers.ContainsKey("Authorization"))
+                bool claimsValid = ClaimsPrincipleValidator.Validate(principal, userID, req.Headers);
+                if (claimsValid == false)
                 {
-                    bool claimsValid = ClaimsPrincipleValidator.Validate(principal, userID, req.Headers);
-                  if (claimsValid == false)
-                  {
                     return new UnauthorizedResult();
-                  }
-                    else isAuthenticated = true;
                 }
 
+                var profileFetcher = new UserProfileFetcher();
+                var userProfile = await profileFetcher.FetchUserProfile(userID);
+                return new OkObjectResult(userProfile);
 
-
-                UserProfile profile;
-                if (isAuthenticated == false || progressEntity == null)
-                {
-                    profile = GetNewUserProfile();
-                }
-                else
-                {
-                    profile = progressEntity.ToUserProfile();
-                }
-
-                if (isAuthenticated && profile.UserName == null)
-                {
-                    profile.UserName = await new UserProfileFetcher().FetchUserName(userID);
-                }
-
-                await UpdateProfileWithPuzzleSet(puzzlesTable, profile);
-
-
-                return new OkObjectResult(profile);
-            }
-            catch (Exception ex)
+            } catch (Exception ex)
             {
                 log.LogError($"for user ID: {userID}. Excep is: {ex.ToString()}");
                 return new BadRequestObjectResult(ex.ToString());
@@ -263,22 +230,25 @@ namespace ServerlessFuncs.User
 
         private static async Task PostCompletedPuzzleHistory(TableClient historyTable, List<UserPuzzleHistory> historyList, string userID) 
         {
-            if (historyList.Count == 0) return;
-            
-
-
-            var batchTrans  = new List<TableTransactionAction>();
-
-            foreach (var h in historyList)
+            try
             {
-                var historyEntity = (Azure.Data.Tables.ITableEntity)h.ToUserPuzzleHistoryEntity(userID);
+                if (historyList.Count == 0) return;
 
-                var transEntity = new TableTransactionAction(TableTransactionActionType.Add, historyEntity);
-                batchTrans.Add(transEntity);
+                var batchTrans = new List<TableTransactionAction>();
+
+                foreach (var h in historyList)
+                {
+                    var historyEntity = (Azure.Data.Tables.ITableEntity)h.ToUserPuzzleHistoryEntity(userID);
+
+                    var transEntity = new TableTransactionAction(TableTransactionActionType.Add, historyEntity);
+                    batchTrans.Add(transEntity);
+                }
+
+                await historyTable.SubmitTransactionAsync(batchTrans);
+            } catch (Exception ex)
+            {
+                Trace.WriteLine("delibrately do nothing...");
             }
-
-            await historyTable.SubmitTransactionAsync(batchTrans);
-
         }
     }
 }

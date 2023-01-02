@@ -11,7 +11,6 @@ using Azure.Data.Tables;
 using ServerlessFuncs.UserPuzzle.Progress;
 using Azure;
 using ServerlessFuncs.PuzzleNS;
-using ServerlessFuncs.UserPuzzle.Status;
 using System.Security.Claims;
 using System.Diagnostics;
 using System.Security.Principal;
@@ -20,6 +19,9 @@ using Microsoft.Identity.Client;
 using static System.Formats.Asn1.AsnWriter;
 using System.Net.Http.Headers;
 using ServerlessFuncs.User;
+using ServerlessFuncs.History;
+using System.Collections.Generic;
+using ServerlessFuncs.Auth;
 
 namespace ServerlessFuncs.UserProgress
 {
@@ -42,7 +44,7 @@ namespace ServerlessFuncs.UserProgress
         {
             try
             {
-                bool isValid = ValidateUserID(principal, userID, req.Headers);
+                bool isValid = ClaimsPrincipleValidator.Validate(principal, userID, req.Headers);
                 if (isValid == false)
                 {
                     return new UnauthorizedResult();
@@ -63,8 +65,7 @@ namespace ServerlessFuncs.UserProgress
                         LoopNum = 1,
                         LevelNum = 1,
                         LastCompletedPuzzleIndex = -1,
-                        UserRating = 1200,
-                        IsNewUser = true,
+                        UserRating = 1100,
                         SubLevel = 1,
                     };
                     puzzleStatus.PuzzlesCompletedForLevel = 0;
@@ -73,11 +74,6 @@ namespace ServerlessFuncs.UserProgress
                 else
                 {
                     puzzleStatus = progressEntity.ToUserPuzzleStatus();
-                }
-
-                if (puzzleStatus.UserName == null)
-                {
-                    puzzleStatus.UserName = await new UserProfileFetcher().FetchUserName(userID);
                 }
 
                 await UpdatePuzzleStatusWithPuzzleSet(puzzlesTable, puzzleStatus);
@@ -97,6 +93,7 @@ namespace ServerlessFuncs.UserProgress
             [HttpTrigger(AuthorizationLevel.Anonymous, "Post", Route = Route + "/{userID}")] HttpRequest req,
             [Table(UserProfileTable, Connection = "AzureWebJobsStorage")] IAsyncCollector<UserPuzzleStatusEntity> progressTable,
             [Table(PuzzlesTable, Connection = "AzureWebJobsStorage")] TableClient puzzlesTable,
+            [Table(UserPuzzleHistoryApi.UserPuzzleHistoryTable, Connection = "AzureWebJobsStorage")] TableClient historyTable,
             ILogger log,
             string userID,
             ClaimsPrincipal principal
@@ -112,6 +109,8 @@ namespace ServerlessFuncs.UserProgress
 
                 string reqBody = await new StreamReader(req.Body).ReadToEndAsync();
                 UserPuzzleStatus puzzStatus = JsonConvert.DeserializeObject<UserPuzzleStatus>(reqBody);
+
+                await PostCompletedPuzzleHistory(historyTable, puzzStatus.CompletedPuzzles, userID);
 
                 await progressTable.AddAsync(puzzStatus.ToUserPuzzleStatusEntity(userID));
                 if (puzzStatus.GetNextPuzzleSet)
@@ -136,6 +135,7 @@ namespace ServerlessFuncs.UserProgress
             [HttpTrigger(AuthorizationLevel.Anonymous, "Put", Route = Route + "/{userID}")] HttpRequest req,
             [Table(UserProfileTable, "{userID}", Connection = "AzureWebJobsStorage")] TableClient progressTable,
             [Table(PuzzlesTable, Connection = "AzureWebJobsStorage")] TableClient puzzlesTable,
+            [Table(UserPuzzleHistoryApi.UserPuzzleHistoryTable, Connection = "AzureWebJobsStorage")] TableClient historyTable,
             ILogger log,
             string userID,
             ClaimsPrincipal principal
@@ -144,7 +144,7 @@ namespace ServerlessFuncs.UserProgress
 
             try
             {
-                bool isValid = ValidateUserID(principal, userID, req.Headers);
+                bool isValid = ClaimsPrincipleValidator.Validate(principal, userID, req.Headers);
                 if (isValid == false)
                 {
                     return new UnauthorizedResult();
@@ -175,6 +175,8 @@ namespace ServerlessFuncs.UserProgress
                 existingRow.TotalPuzzlesCompleted = updatedEntity.TotalPuzzlesCompleted;
 
                 await progressTable.UpdateEntityAsync(existingRow, existingRow.ETag, TableUpdateMode.Replace);
+
+                await PostCompletedPuzzleHistory(historyTable, updatedEntity.CompletedPuzzles, userID);
 
                 if (updatedEntity.GetNextPuzzleSet)
                 {
@@ -241,6 +243,31 @@ namespace ServerlessFuncs.UserProgress
                 }
             }
             return false;
+        }
+
+
+        private static async Task PostCompletedPuzzleHistory(TableClient historyTable, List<UserPuzzleHistory> historyList, string userID)
+        {
+            try
+            {
+                if (historyList.Count == 0) return;
+
+                var batchTrans = new List<TableTransactionAction>();
+
+                foreach (var h in historyList)
+                {
+                    var historyEntity = (Azure.Data.Tables.ITableEntity)h.ToUserPuzzleHistoryEntity(userID);
+
+                    var transEntity = new TableTransactionAction(TableTransactionActionType.Add, historyEntity);
+                    batchTrans.Add(transEntity);
+                }
+
+                await historyTable.SubmitTransactionAsync(batchTrans);
+            }
+            catch (Exception ex)
+            {
+                Trace.WriteLine("delibrately do nothing...");
+            }
         }
     }
 }
