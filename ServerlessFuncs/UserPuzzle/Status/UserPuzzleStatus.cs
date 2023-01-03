@@ -15,7 +15,6 @@ namespace ServerlessFuncs.UserProgress
         public int UserRating { get; set; }
         public List<Puzzle> Puzzles = new List<Puzzle>();
         public List<UserPuzzleHistory> CompletedPuzzles = new List<UserPuzzleHistory>();
-        public int PIndex { get; set; }
         public bool GetNextPuzzleSet { get; set; }
         public int TotalPuzzlesCompleted { get; set; }
         public int PuzzlesCompletedForLevel { get; set; }

@@ -11,7 +11,11 @@ namespace ServerlessFuncs.History
         public bool Success { get; set; }
         public int? PCompSeconds { get; set; }
         public DateTimeOffset? CompletedOn { get; set; }
-        public Puzzle Puzzle { get; set; }
+        public string PID { get; set; }
+        public int PLevel { get; set; }
+        public int PRating { get; set; }
+        public string PFen { get; set; }
+        public string PMoves { get; set; }
     }
 }
 
