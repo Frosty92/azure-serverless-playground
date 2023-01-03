@@ -49,14 +49,6 @@ namespace ServerlessFuncs.UserProgress
                 {
                     return new UnauthorizedResult();
                 }
-       
-                Trace.WriteLine("CLAIMS ARE: \n");
-                foreach (Claim claim in principal.Claims)
-                {
-                    Trace.WriteLine(claim.Type + " : " + claim.Value + "\n");
-                    log.LogInformation(claim.Type + " : " + claim.Value + "\n");
-                }
-
                 UserPuzzleStatus puzzleStatus;
                 if (progressEntity == null)
                 {
@@ -217,6 +209,14 @@ namespace ServerlessFuncs.UserProgress
                 userStatus.LastCompletedPuzzleIndex
                 );
 
+            if (puzzleSet.Puzzles.Count <= 6)
+            {
+                userStatus.NextPuzzleSet = await puzzleSetFetcher.FetchPuzzleSet(
+                userStatus.LevelNum,
+                userStatus.SubLevel + 1,
+                -1
+                );
+            }
             userStatus.Puzzles = puzzleSet.Puzzles;
             userStatus.SubLevel = puzzleSet.SubLevel;
             userStatus.LevelNum = puzzleSet.LevelNum;
