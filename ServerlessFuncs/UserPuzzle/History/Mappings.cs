@@ -16,11 +16,7 @@ namespace ServerlessFuncs.History
                 Success = entity.Success,
                 ID = entity.RowKey,
                 CompletedOn = entity.Timestamp,
-                PFen = entity.PFen,
-                PID = entity.PID,
-                PLevel = entity.PLevel,
-                PRating = entity.PRating,
-                PMoves = entity.PMoves,
+                Puzzle = entity.Puzzle,
                 RatingAfter = entity.RatingAfter,
                 RatingBefore = entity.RatingBefore
             };
@@ -36,11 +32,7 @@ namespace ServerlessFuncs.History
                 RatingBefore = history.RatingBefore,
                 PCompSeconds = history.PCompSeconds,
                 Success = history.Success,
-                PID = history.PID,
-                PLevel = history.PLevel,
-                PRating = history.PRating,
-                PFen = history.PFen,
-                PMoves = history.PMoves
+                Puzzle = history.Puzzle
             };
         }
     }
