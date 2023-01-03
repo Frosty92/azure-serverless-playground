@@ -250,7 +250,6 @@ namespace ServerlessFuncs.UserProgress
         {
             try
             {
-                Trace.WriteLine("before starting");
                 if (historyList.Count == 0) return;
 
                 var batchTrans = new List<TableTransactionAction>();
@@ -258,8 +257,6 @@ namespace ServerlessFuncs.UserProgress
                 foreach (var h in historyList)
                 {
                     var historyEntity = (Azure.Data.Tables.ITableEntity)h.ToUserPuzzleHistoryEntity(userID);
-                    Trace.WriteLine($"history entity: \n {JsonConvert.SerializeObject(historyEntity)}");
-
                     var transEntity = new TableTransactionAction(TableTransactionActionType.Add, historyEntity);
                     batchTrans.Add(transEntity);
                 }
