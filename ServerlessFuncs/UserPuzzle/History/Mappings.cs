@@ -21,7 +21,8 @@ namespace ServerlessFuncs.History
                 PRating = entity.PRating,
                 PMoves = entity.PMoves,
                 RatingAfter = entity.RatingAfter,
-                RatingBefore = entity.RatingBefore
+                RatingBefore = entity.RatingBefore,
+                Marked = entity.Marked
             };
         }
 
@@ -39,7 +40,8 @@ namespace ServerlessFuncs.History
                 PLevel = history.PLevel,
                 PRating = history.PRating,
                 PFen = history.PFen,
-                PMoves = history.PMoves
+                PMoves = history.PMoves,
+                Marked = history.Marked
             };
         }
     }

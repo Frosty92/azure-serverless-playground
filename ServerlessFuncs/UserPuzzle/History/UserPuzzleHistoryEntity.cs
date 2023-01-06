@@ -16,6 +16,7 @@ namespace ServerlessFuncs.History
         public int PRating { get; set; }
         public string PFen { get; set; }
         public string PMoves { get; set; }
+        public bool Marked { get; set; }
 
     };
 };

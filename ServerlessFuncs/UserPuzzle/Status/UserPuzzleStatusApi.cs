@@ -22,6 +22,8 @@ using ServerlessFuncs.User;
 using ServerlessFuncs.History;
 using System.Collections.Generic;
 using ServerlessFuncs.Auth;
+using System.Linq;
+using ServerlessFuncs.UserPuzzle.History;
 
 namespace ServerlessFuncs.UserProgress
 {
@@ -101,6 +103,7 @@ namespace ServerlessFuncs.UserProgress
 
                 string reqBody = await new StreamReader(req.Body).ReadToEndAsync();
                 UserPuzzleStatus puzzStatus = JsonConvert.DeserializeObject<UserPuzzleStatus>(reqBody);
+
 
                 await PostCompletedPuzzleHistory(historyTable, puzzStatus.CompletedPuzzles, userID);
 
@@ -250,13 +253,39 @@ namespace ServerlessFuncs.UserProgress
         {
             try
             {
+                await PostCompletedPuzzleHistoryByPartition(historyTable, historyList, userID);
+
+                await PostCompletedPuzzleHistoryByPartition(
+                    historyTable,
+                    historyList.Where(r => r.Success == false).ToList(),
+                    UserHistoryPartitionKeys.GetForWrong(userID)
+                );
+
+                await PostCompletedPuzzleHistoryByPartition(
+                    historyTable,
+                    historyList.Where(r => r.Marked == true).ToList(),
+                    UserHistoryPartitionKeys.GetForMarked(userID)
+                );
+
+            }
+            catch (Exception ex)
+            {
+                Trace.WriteLine($"exception is: {ex}");
+            }
+        }
+
+
+        private static async Task PostCompletedPuzzleHistoryByPartition(TableClient historyTable, List<UserPuzzleHistory> historyList, string partitionKey)
+        {
+            try
+            {
                 if (historyList.Count == 0) return;
 
                 var batchTrans = new List<TableTransactionAction>();
 
                 foreach (var h in historyList)
                 {
-                    var historyEntity = (Azure.Data.Tables.ITableEntity)h.ToUserPuzzleHistoryEntity(userID);
+                    var historyEntity = (Azure.Data.Tables.ITableEntity)h.ToUserPuzzleHistoryEntity(partitionKey);
                     var transEntity = new TableTransactionAction(TableTransactionActionType.Add, historyEntity);
                     batchTrans.Add(transEntity);
                 }
@@ -268,5 +297,7 @@ namespace ServerlessFuncs.UserProgress
                 Trace.WriteLine($"exception is: {ex}");
             }
         }
+
+
     }
 }

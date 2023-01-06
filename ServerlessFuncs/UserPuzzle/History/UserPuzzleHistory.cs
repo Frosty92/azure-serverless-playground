@@ -8,7 +8,6 @@ namespace ServerlessFuncs.History
         public string ID { get; set; }
         public int RatingBefore { get; set; }
         public int RatingAfter { get; set; }
-        public bool Success { get; set; }
         public int? PCompSeconds { get; set; }
         public DateTimeOffset? CompletedOn { get; set; }
         public string PID { get; set; }
@@ -16,6 +15,8 @@ namespace ServerlessFuncs.History
         public int PRating { get; set; }
         public string PFen { get; set; }
         public string PMoves { get; set; }
+        public bool Success { get; set; }
+        public bool Marked{ get; set; }
     }
 }
 
