@@ -30,14 +30,14 @@ namespace ServerlessFuncs.UserProgress
     public static class UserPuzzleStatusApi
     {
         private const string Route = "userPuzzleStatus";
-        private const string UserProfileTable = "userPuzzleStatus";
+        private const string UsetPuzzleStatusTable = "userPuzzleStatus";
         private const string PuzzlesTable = "puzzles";
 
 
         [FunctionName("GetUserPuzzleStatus")]
         public static async Task<IActionResult> GetUserPuzzleStatus(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = Route + "/{userID}")] HttpRequest req,
-            [Table(UserProfileTable, "{userID}","{userID}", Connection = "AzureWebJobsStorage")] UserPuzzleStatusEntity progressEntity,
+            [Table(UsetPuzzleStatusTable, "{userID}","{userID}", Connection = "AzureWebJobsStorage")] UserPuzzleStatusEntity progressEntity,
             [Table(PuzzlesTable, Connection = "AzureWebJobsStorage")] TableClient puzzlesTable,
             ILogger log,
             string userID,
@@ -79,13 +79,69 @@ namespace ServerlessFuncs.UserProgress
                 log.LogError($"for user ID: {userID}. Excep is: {ex.ToString()}");
                 return new BadRequestObjectResult(ex.ToString());
             }
-            
+        }
+
+
+        [FunctionName("UpdatePuzzleLevel")]
+        public static async Task<IActionResult> UpdatePuzzleLevel(
+           [HttpTrigger(AuthorizationLevel.Anonymous, "Get", Route ="updateLevel/{userID}")] HttpRequest req,
+           [Table(UsetPuzzleStatusTable, "{userID}", Connection = "AzureWebJobsStorage")] TableClient progressTable,
+           [Table(PuzzlesTable, Connection = "AzureWebJobsStorage")] TableClient puzzlesTable,
+           [Table(UserPuzzleHistoryApi.UserPuzzleHistoryTable, Connection = "AzureWebJobsStorage")] TableClient historyTable,
+           ILogger log,
+           string userID,
+           ClaimsPrincipal principal
+           )
+        {
+
+            try
+            {
+                bool isValid = ClaimsPrincipleValidator.Validate(principal, userID, req.Headers);
+                if (isValid == false)
+                {
+                    return new UnauthorizedResult();
+                }
+
+                UserPuzzleStatusEntity existingRow = null;
+                try
+                {
+                    var findResult = await progressTable.GetEntityAsync<UserPuzzleStatusEntity>(userID, userID);
+                    existingRow = findResult.Value;
+                }
+                catch (RequestFailedException e) when (e.Status == 404)
+                {
+                    return new NotFoundResult();
+                }
+
+                existingRow.LevelNum = Convert.ToInt16(req.Query["updatedLevel"]);
+                existingRow.SubLevel = 1;
+                existingRow.LastCompletedPuzzleIndex = -1;
+                existingRow.PuzzlesCompletedForLevel = 0;
+                
+
+                await progressTable.UpdateEntityAsync(existingRow, existingRow.ETag, TableUpdateMode.Replace);
+
+                var puzzleSetFetcher = new PuzzleSetFetcher(puzzlesTable);
+                var puzzleSet = await puzzleSetFetcher.FetchPuzzleSet(
+                    existingRow.LevelNum,
+                    existingRow.SubLevel,
+                    existingRow.LastCompletedPuzzleIndex //this will trigger the next sequence to load
+                    );
+
+                return new OkObjectResult(puzzleSet);
+
+
+            }
+            catch (Exception ex)
+            {
+                return new BadRequestObjectResult(ex.ToString());
+            }
         }
 
         [FunctionName("CreateUserPuzzleStatus")]
         public static async Task<IActionResult> CreateuserPuzzleStatus(
             [HttpTrigger(AuthorizationLevel.Anonymous, "Post", Route = Route + "/{userID}")] HttpRequest req,
-            [Table(UserProfileTable, Connection = "AzureWebJobsStorage")] IAsyncCollector<UserPuzzleStatusEntity> progressTable,
+            [Table(UsetPuzzleStatusTable, Connection = "AzureWebJobsStorage")] IAsyncCollector<UserPuzzleStatusEntity> progressTable,
             [Table(PuzzlesTable, Connection = "AzureWebJobsStorage")] TableClient puzzlesTable,
             [Table(UserPuzzleHistoryApi.UserPuzzleHistoryTable, Connection = "AzureWebJobsStorage")] TableClient historyTable,
             ILogger log,
@@ -128,7 +184,7 @@ namespace ServerlessFuncs.UserProgress
         [FunctionName("UpdateUserPuzzleStatus")]
         public static async Task<IActionResult> UpdateUserPuzzleStatus(
             [HttpTrigger(AuthorizationLevel.Anonymous, "Put", Route = Route + "/{userID}")] HttpRequest req,
-            [Table(UserProfileTable, "{userID}", Connection = "AzureWebJobsStorage")] TableClient progressTable,
+            [Table(UsetPuzzleStatusTable, "{userID}", Connection = "AzureWebJobsStorage")] TableClient progressTable,
             [Table(PuzzlesTable, Connection = "AzureWebJobsStorage")] TableClient puzzlesTable,
             [Table(UserPuzzleHistoryApi.UserPuzzleHistoryTable, Connection = "AzureWebJobsStorage")] TableClient historyTable,
             ILogger log,

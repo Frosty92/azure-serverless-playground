@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using AzureFunctionsTodo.TableStorage;
 using ServerlessFuncs.Database;
 
 namespace ServerlessFuncs.UserPuzzle.Progress
