@@ -22,14 +22,19 @@ namespace ServerlessFuncs.Auth
              * Claims are not added when running in localHost so for debugging purposes simply return
              * true.
              */
-            if (headers.ContainsKey("Host"))
+
+           
+            if (IsDebugMode())
             {
-                string host = headers["Host"];
-                if (host.Contains("localhost")) return true;
+                return true;
             }
+            //if (headers.ContainsKey("Host"))
+            //{
+            //    string host = headers["Host"];
+            //    if (host.Contains("localhost")) return true;
+            //}
             foreach (Claim claim in principle.Claims)
             {
-                Trace.WriteLine($"Claim type is: {claim.Type}. value is: {claim.Value}");
                 if (claim.Type == "http://schemas.microsoft.com/identity/claims/objectidentifier")
                 {
                     string tokenUserID = claim.Value;
@@ -49,6 +54,12 @@ namespace ServerlessFuncs.Auth
 
             bool isValid = isUserIDValid && isClaimExpired == false;
             return isValid;
+        }
+
+        private static bool IsDebugMode()
+        {
+            string APP_MODE = Environment.GetEnvironmentVariable("APP_MODE");
+            return APP_MODE == "debug";
         }
     }
 }

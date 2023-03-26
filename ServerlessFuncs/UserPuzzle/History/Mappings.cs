@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Globalization;
 using Microsoft.Graph;
 using Microsoft.Graph.ExternalConnectors;
@@ -14,7 +15,7 @@ namespace ServerlessFuncs.History
                 PCompSeconds = entity.PCompSeconds,
                 Success = entity.Success,
                 ID = entity.RowKey,
-                CompletedOn = entity.Timestamp,
+                CompletedOn = entity.CompletedOn.ToString(),
                 PFen = entity.PFen,
                 PID = entity.PID,
                 PLevel = entity.PLevel,
@@ -28,6 +29,11 @@ namespace ServerlessFuncs.History
 
         public static UserPuzzleHistoryEntity ToUserPuzzleHistoryEntity(this UserPuzzleHistory history, string userID)
         {
+
+            Trace.WriteLine($"Completed on: {history.CompletedOn}");
+
+            DateTime unspecified = DateTime.ParseExact(history.CompletedOn, "M/dd/yyyy h:mm:ss tt", CultureInfo.CurrentCulture);
+            var specified = DateTime.SpecifyKind(unspecified, DateTimeKind.Utc);
             return new UserPuzzleHistoryEntity()
             {
                 RowKey = history.ID,
@@ -41,7 +47,8 @@ namespace ServerlessFuncs.History
                 PRating = history.PRating,
                 PFen = history.PFen,
                 PMoves = history.PMoves,
-                Marked = history.Marked
+                Marked = history.Marked,
+                CompletedOn = specified
             };
         }
     }

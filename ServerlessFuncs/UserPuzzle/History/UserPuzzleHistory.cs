@@ -9,7 +9,7 @@ namespace ServerlessFuncs.History
         public int RatingBefore { get; set; }
         public int RatingAfter { get; set; }
         public int? PCompSeconds { get; set; }
-        public DateTimeOffset? CompletedOn { get; set; }
+        public string CompletedOn { get; set; }
         public string PID { get; set; }
         public int PLevel { get; set; }
         public int PRating { get; set; }

@@ -106,7 +106,7 @@ namespace ServerlessFuncs.User
 
             catch (Exception ex)
             {
-                log.LogCritical("Caught Generic exception");
+                log.LogCritical($"Caught Generic exception: {ex}");
                 return new BadRequestResult(); //returns 400 statuscode
             }
         }
@@ -230,25 +230,21 @@ namespace ServerlessFuncs.User
 
         private static async Task PostCompletedPuzzleHistory(TableClient historyTable, List<UserPuzzleHistory> historyList, string userID) 
         {
-            try
+            
+
+            if (historyList.Count == 0) return;
+            var batchTrans = new List<TableTransactionAction>();
+
+            foreach (var h in historyList)
             {
-                if (historyList.Count == 0) return;
+                var historyEntity = (Azure.Data.Tables.ITableEntity)h.ToUserPuzzleHistoryEntity(userID);
 
-                var batchTrans = new List<TableTransactionAction>();
-
-                foreach (var h in historyList)
-                {
-                    var historyEntity = (Azure.Data.Tables.ITableEntity)h.ToUserPuzzleHistoryEntity(userID);
-
-                    var transEntity = new TableTransactionAction(TableTransactionActionType.Add, historyEntity);
-                    batchTrans.Add(transEntity);
-                }
-
-                await historyTable.SubmitTransactionAsync(batchTrans);
-            } catch (Exception ex)
-            {
-                Trace.WriteLine("delibrately do nothing...");
+                var transEntity = new TableTransactionAction(TableTransactionActionType.Add, historyEntity);
+                batchTrans.Add(transEntity);
             }
+
+            await historyTable.SubmitTransactionAsync(batchTrans);
+             
         }
     }
 }

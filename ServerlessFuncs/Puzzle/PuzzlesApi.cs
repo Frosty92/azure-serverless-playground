@@ -32,6 +32,15 @@ namespace ServerlessFuncs.Puzzles
             int level)
         {
             int subLevel = Convert.ToInt16(req.Query["subLevel"]);
+
+            /**
+             * If the user is not signed in, only allow access to one sublevel
+             * for sampling purposes.
+             */
+            if (subLevel > 1)
+            {
+                return new UnauthorizedResult();
+            }
             var puzzleSetFetcher = new PuzzleSetFetcher(puzzlesTable);
             var puzzleSet = await puzzleSetFetcher.FetchPuzzleSet(
                 level,

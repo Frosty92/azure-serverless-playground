@@ -115,6 +115,7 @@ namespace ServerlessFuncs.UserProgress
 
                 existingRow.LevelNum = Convert.ToInt16(req.Query["updatedLevel"]);
                 existingRow.SubLevel = 1;
+                existingRow.TotalPuzzlesCompleted = existingRow.TotalPuzzlesCompleted - existingRow.PuzzlesCompletedForLevel; 
                 existingRow.LastCompletedPuzzleIndex = -1;
                 existingRow.PuzzlesCompletedForLevel = 0;
                 
@@ -241,6 +242,7 @@ namespace ServerlessFuncs.UserProgress
             }
             catch (Exception ex)
             {
+                log.LogError(ex.ToString());
                 return new BadRequestObjectResult(ex.ToString());
             }
         }
@@ -305,53 +307,46 @@ namespace ServerlessFuncs.UserProgress
         }
 
 
-        private static async Task PostCompletedPuzzleHistory(TableClient historyTable, List<UserPuzzleHistory> historyList, string userID)
-        {
-            try
-            {
-                await PostCompletedPuzzleHistoryByPartition(historyTable, historyList, userID);
+        private static async Task PostCompletedPuzzleHistory(
+            TableClient historyTable,
+            List<UserPuzzleHistory> historyList,
+            string userID) {
 
-                await PostCompletedPuzzleHistoryByPartition(
-                    historyTable,
-                    historyList.Where(r => r.Success == false).ToList(),
-                    UserHistoryPartitionKeys.GetForWrong(userID)
-                );
+            Trace.WriteLine("posting completed puzzles...");
+            await PostCompletedPuzzleHistoryByPartition(historyTable, historyList, userID);
 
-                await PostCompletedPuzzleHistoryByPartition(
-                    historyTable,
-                    historyList.Where(r => r.Marked == true).ToList(),
-                    UserHistoryPartitionKeys.GetForMarked(userID)
-                );
+            await PostCompletedPuzzleHistoryByPartition(
+                historyTable,
+                historyList.Where(r => r.Success == false).ToList(),
+                UserHistoryPartitionKeys.GetForWrong(userID)
+            );
 
-            }
-            catch (Exception ex)
-            {
-                Trace.WriteLine($"exception is: {ex}");
-            }
+            await PostCompletedPuzzleHistoryByPartition(
+                historyTable,
+                historyList.Where(r => r.Marked == true).ToList(),
+                UserHistoryPartitionKeys.GetForMarked(userID)
+            );
         }
+            
+       
+        private static async Task PostCompletedPuzzleHistoryByPartition(
+            TableClient historyTable,
+            List<UserPuzzleHistory> historyList,
+            string partitionKey) {
+            
+            if (historyList.Count == 0) return;
 
+            var batchTrans = new List<TableTransactionAction>();
 
-        private static async Task PostCompletedPuzzleHistoryByPartition(TableClient historyTable, List<UserPuzzleHistory> historyList, string partitionKey)
-        {
-            try
+            foreach (var h in historyList)
             {
-                if (historyList.Count == 0) return;
-
-                var batchTrans = new List<TableTransactionAction>();
-
-                foreach (var h in historyList)
-                {
-                    var historyEntity = (Azure.Data.Tables.ITableEntity)h.ToUserPuzzleHistoryEntity(partitionKey);
-                    var transEntity = new TableTransactionAction(TableTransactionActionType.Add, historyEntity);
-                    batchTrans.Add(transEntity);
-                }
-
-                await historyTable.SubmitTransactionAsync(batchTrans);
+                var historyEntity = (Azure.Data.Tables.ITableEntity)h.ToUserPuzzleHistoryEntity(partitionKey);
+                var transEntity = new TableTransactionAction(TableTransactionActionType.Add, historyEntity);
+                batchTrans.Add(transEntity);
             }
-            catch (Exception ex)
-            {
-                Trace.WriteLine($"exception is: {ex}");
-            }
+
+            await historyTable.SubmitTransactionAsync(batchTrans);
+           
         }
 
 
