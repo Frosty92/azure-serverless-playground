@@ -10,9 +10,9 @@ namespace ServerlessFuncs.User
     public class UserProfileFetcher
     {
 
-        public async Task<UserProfileNew> FetchUserProfile(string userObjectID)
+        public async Task<UserProfile> FetchUserProfile(string userObjectID)
         {
-            var profile = new UserProfileNew();
+            var profile = new UserProfile();
             profile.UserName = await FetchUserName(userObjectID);
             return profile;
         }
