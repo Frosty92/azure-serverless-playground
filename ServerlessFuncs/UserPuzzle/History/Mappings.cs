@@ -32,8 +32,7 @@ namespace ServerlessFuncs.History
 
             Trace.WriteLine($"Completed on: {history.CompletedOn}");
 
-            DateTime unspecified = DateTime.ParseExact(history.CompletedOn, "M/dd/yyyy h:mm:ss tt", CultureInfo.CurrentCulture);
-            var specified = DateTime.SpecifyKind(unspecified, DateTimeKind.Utc);
+            var compDate = DateTimeOffset.ParseExact(history.CompletedOn, "s", CultureInfo.InvariantCulture);
             return new UserPuzzleHistoryEntity()
             {
                 RowKey = history.ID,
@@ -48,7 +47,7 @@ namespace ServerlessFuncs.History
                 PFen = history.PFen,
                 PMoves = history.PMoves,
                 Marked = history.Marked,
-                CompletedOn = specified
+                CompletedOn = compDate
             };
         }
     }

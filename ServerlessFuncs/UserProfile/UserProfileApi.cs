@@ -41,7 +41,6 @@ namespace ServerlessFuncs.User
                 log.LogError($"for user ID: {userID}. Excep is: {ex.ToString()}");
                 return new BadRequestObjectResult(ex.ToString());
             }
-
         }
     }
 }

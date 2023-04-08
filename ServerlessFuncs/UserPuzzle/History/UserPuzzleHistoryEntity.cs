@@ -17,7 +17,7 @@ namespace ServerlessFuncs.History
         public string PFen { get; set; }
         public string PMoves { get; set; }
         public bool Marked { get; set; }
-        public DateTime CompletedOn { get; set; }
+        public DateTimeOffset CompletedOn { get; set; }
     };
 };
 
