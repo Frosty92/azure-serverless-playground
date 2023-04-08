@@ -37,7 +37,7 @@ namespace ServerlessFuncs.UserProgress
         [FunctionName("GetUserPuzzleStatus")]
         public static async Task<IActionResult> GetUserPuzzleStatus(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = Route + "/{userID}")] HttpRequest req,
-            [Table(UsetPuzzleStatusTable, "{userID}","{userID}", Connection = "AzureWebJobsStorage")] UserPuzzleStatusEntity progressEntity,
+            [Table(UsetPuzzleStatusTable, "{userID}", "{userID}", Connection = "AzureWebJobsStorage")] UserPuzzleStatusEntity progressEntity,
             [Table(PuzzlesTable, Connection = "AzureWebJobsStorage")] TableClient puzzlesTable,
             ILogger log,
             string userID,
@@ -74,7 +74,8 @@ namespace ServerlessFuncs.UserProgress
 
 
                 return new OkObjectResult(puzzleStatus);
-            } catch (Exception ex)
+            }
+            catch (Exception ex)
             {
                 log.LogError($"for user ID: {userID}. Excep is: {ex.ToString()}");
                 return new BadRequestObjectResult(ex.ToString());
@@ -84,7 +85,7 @@ namespace ServerlessFuncs.UserProgress
 
         [FunctionName("UpdatePuzzleLevel")]
         public static async Task<IActionResult> UpdatePuzzleLevel(
-           [HttpTrigger(AuthorizationLevel.Anonymous, "Get", Route ="updateLevel/{userID}")] HttpRequest req,
+           [HttpTrigger(AuthorizationLevel.Anonymous, "Get", Route = "updateLevel/{userID}")] HttpRequest req,
            [Table(UsetPuzzleStatusTable, "{userID}", Connection = "AzureWebJobsStorage")] TableClient progressTable,
            [Table(PuzzlesTable, Connection = "AzureWebJobsStorage")] TableClient puzzlesTable,
            [Table(UserPuzzleHistoryApi.UserPuzzleHistoryTable, Connection = "AzureWebJobsStorage")] TableClient historyTable,
@@ -115,10 +116,10 @@ namespace ServerlessFuncs.UserProgress
 
                 existingRow.LevelNum = Convert.ToInt16(req.Query["updatedLevel"]);
                 existingRow.SubLevel = 1;
-                existingRow.TotalPuzzlesCompleted = existingRow.TotalPuzzlesCompleted - existingRow.PuzzlesCompletedForLevel; 
+                existingRow.TotalPuzzlesCompleted = existingRow.TotalPuzzlesCompleted - existingRow.PuzzlesCompletedForLevel;
                 existingRow.LastCompletedPuzzleIndex = -1;
                 existingRow.PuzzlesCompletedForLevel = 0;
-                
+
 
                 await progressTable.UpdateEntityAsync(existingRow, existingRow.ETag, TableUpdateMode.Replace);
 
@@ -152,7 +153,7 @@ namespace ServerlessFuncs.UserProgress
         {
             try
             {
-                bool isValid = ValidateUserID(principal, userID, req.Headers);
+                bool isValid = ClaimsPrincipleValidator.Validate(principal, userID, req.Headers);
                 if (isValid == false)
                 {
                     return new UnauthorizedResult();
@@ -234,7 +235,8 @@ namespace ServerlessFuncs.UserProgress
                 {
                     var nextPuzzleSet = await GetNextPuzzleSet(puzzlesTable, updatedEntity.LevelNum, updatedEntity.SubLevel);
                     return new OkObjectResult(nextPuzzleSet);
-                } else
+                }
+                else
                 {
                     return new OkResult();
                 }
@@ -287,30 +289,12 @@ namespace ServerlessFuncs.UserProgress
 
 
 
-        private static bool ValidateUserID(ClaimsPrincipal principle, string userID, IHeaderDictionary headers)
-        {
-            if (headers.ContainsKey("Host"))
-            {
-                string host = headers["Host"];
-                if (host.Contains("localhost")) return true;
-            }
-            foreach (Claim claim in principle.Claims)
-            {
-                if (claim.Type == "http://schemas.microsoft.com/identity/claims/objectidentifier")
-                {
-                   
-                    string tokenUserID = claim.Value;
-                    return tokenUserID == userID;
-                }
-            }
-            return false;
-        }
-
 
         private static async Task PostCompletedPuzzleHistory(
             TableClient historyTable,
             List<UserPuzzleHistory> historyList,
-            string userID) {
+            string userID)
+        {
 
             Trace.WriteLine("posting completed puzzles...");
             await PostCompletedPuzzleHistoryByPartition(historyTable, historyList, userID);
@@ -327,13 +311,14 @@ namespace ServerlessFuncs.UserProgress
                 UserHistoryPartitionKeys.GetForMarked(userID)
             );
         }
-            
-       
+
+
         private static async Task PostCompletedPuzzleHistoryByPartition(
             TableClient historyTable,
             List<UserPuzzleHistory> historyList,
-            string partitionKey) {
-            
+            string partitionKey)
+        {
+
             if (historyList.Count == 0) return;
 
             var batchTrans = new List<TableTransactionAction>();
@@ -346,7 +331,7 @@ namespace ServerlessFuncs.UserProgress
             }
 
             await historyTable.SubmitTransactionAsync(batchTrans);
-           
+
         }
 
 

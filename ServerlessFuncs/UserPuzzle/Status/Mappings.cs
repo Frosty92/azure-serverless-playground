@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Newtonsoft.Json;
 using ServerlessFuncs.Puzzles;
 using ServerlessFuncs.TableStorage;
 using ServerlessFuncs.UserProgress;
@@ -13,7 +14,7 @@ namespace ServerlessFuncs.UserPuzzle.Progress
             return new UserPuzzleStatus()
             {
                 LevelNum = puzzleEntity.LevelNum,
-                LoopNum = puzzleEntity.LoopNum,
+                LoopNum =  puzzleEntity.LoopNum,
                 UserRating = puzzleEntity.UserRating,
                 LastCompletedPuzzleIndex = puzzleEntity.LastCompletedPuzzleIndex,
                 SubLevel = puzzleEntity.SubLevel,

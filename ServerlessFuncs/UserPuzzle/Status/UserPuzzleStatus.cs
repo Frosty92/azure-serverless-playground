@@ -20,6 +20,7 @@ namespace ServerlessFuncs.UserProgress
         public bool GetNextPuzzleSet { get; set; }
         public int TotalPuzzlesCompleted { get; set; }
         public int PuzzlesCompletedForLevel { get; set; }
+        public bool isNew { get; set; }
     }
 }
 

@@ -28,11 +28,6 @@ namespace ServerlessFuncs.Auth
             {
                 return true;
             }
-            //if (headers.ContainsKey("Host"))
-            //{
-            //    string host = headers["Host"];
-            //    if (host.Contains("localhost")) return true;
-            //}
             foreach (Claim claim in principle.Claims)
             {
                 if (claim.Type == "http://schemas.microsoft.com/identity/claims/objectidentifier")
